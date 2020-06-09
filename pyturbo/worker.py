@@ -2,7 +2,7 @@ from typing import Union
 
 from .runtime import mp
 from .stage import Stage
-from .task import ControlCommand, ControlTask, RegularTask
+from .task import ControlCommand, ControlTask, Task
 
 
 class WorkerGroup(object):
@@ -77,7 +77,7 @@ class Worker(mp.Process):
                     return
                 continue
             result = self.stage.process(task)
-            if isinstance(result, RegularTask):
+            if isinstance(result, Task):
                 self.result_queue.put(result)
             else:
                 for r in result:

@@ -1,66 +1,71 @@
+import sys
 import time
 
-import sys
 sys.path.insert(0, '/home/lijun/workspaces/pyturbo')
-
-from pyturbo import Stage, AsyncPipeline, RegularTask
+from pyturbo import AsyncPipeline, ReorderStage, Stage, Task
 from pyturbo.utils import progressbar
 
-class ToyStage(Stage):
 
-    def __init__(self, num_worker):
-        super(ToyStage, self).__init__(max_worker=num_worker)
+class Stage1(Stage):
+
+    def __init__(self):
+        super(Stage1, self).__init__(max_worker=1)
+
+    def process(self, task):
+        for i in range(1000):
+            time.sleep(0.01)
+            result = Task(task.content + i, parent_task=task)
+            yield result
+
+
+class Stage2(Stage):
+
+    def __init__(self):
+        super(Stage2, self).__init__(max_worker=4)
 
     def process(self, task):
         time.sleep(0.01)
         return task
 
 
-class Stage1(ToyStage):
+class Stage3(Stage):
 
     def __init__(self):
-        super(Stage1, self).__init__(1)
+        super(Stage3, self).__init__(max_worker=2)
 
     def process(self, task):
-        for i in range(1000):
-            time.sleep(0.01)
-            result = RegularTask(task.content + i, parent_task=task)
-            yield result
+        time.sleep(0.01)
+        return task
 
 
-class Stage2(ToyStage):
+class Stage4(ReorderStage):
 
-    def __init__(self):
-        super(Stage2, self).__init__(4)
+    def get_sequence_id(self, task):
+        return task.content
 
-
-class Stage3(ToyStage):
-
-    def __init__(self):
-        super(Stage3, self).__init__(2)
-
-
-class Stage4(ToyStage):
-
-    def __init__(self):
-        super(Stage4, self).__init__(1)
+    def process(self, task):
+        time.sleep(0.01)
+        return task
 
 
 def main():
     pipeline = AsyncPipeline([Stage1(), Stage2(), Stage3(), Stage4()])
     for v in range(0, 2000, 1000):
-        task = RegularTask(v)
+        task = Task(v)
         pipeline.job_queue.put(task)
     for r in progressbar(range(2000)):
-        pipeline.result_queue.get()
+        d = pipeline.result_queue.get()
+        assert d.content == r
     pipeline.reset()
     for v in range(2000, 4000, 1000):
-        task = RegularTask(v)
+        task = Task(v)
         pipeline.job_queue.put(task)
     for r in progressbar(range(2000)):
-        pipeline.result_queue.get()
+        d = pipeline.result_queue.get()
+        assert d.content == r + 2000
     pipeline.end()
     pipeline.join()
+
 
 if __name__ == "__main__":
     main()

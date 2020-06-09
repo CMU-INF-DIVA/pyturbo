@@ -3,37 +3,15 @@ from collections import namedtuple
 from enum import IntEnum, auto
 from typing import Any, Union
 
-
-class Task(object):
-    '''
-    Base task.
-    '''
-
-    def __init__(self):
-        self.create_time = time.time()
-
-    def start(self):
-        self.start_time = time.time()
-
-    def finish(self):
-        self.finish_time = time.time()
-
-    def __repr__(self, info: Union[None, str] = None):
-        if info is None:
-            return self.__class__.__name__
-        return '%s(%s)' % (self.__class__.__name__, info)
-
-
 ControlCommand = IntEnum('ControlCommand', ['End', 'Reset'])
 
 
-class ControlTask(Task):
+class ControlTask(object):
     '''
     Pipeline control task.
     '''
 
     def __init__(self, command: ControlCommand):
-        super(ControlTask, self).__init__()
         self.command = command
 
     def __repr__(self):
@@ -44,14 +22,14 @@ TaskLog = namedtuple('TaskLog', [
     'stage', 'duration', 'start_time', 'end_time'])
 
 
-class RegularTask(Task):
+class Task(object):
     '''
     Regular excutable task.
     '''
 
     def __init__(self, content: Any, meta: Union[None, dict] = None, *,
-                 parent_task: Union[None, Task] = None):
-        super(RegularTask, self).__init__()
+                 parent_task=None):
+        self.create_time = time.time()
         self.content = content
         self._build_meta(meta, parent_task)
         self.logs = parent_task.logs.copy() if parent_task is not None else []
@@ -64,15 +42,15 @@ class RegularTask(Task):
             self.meta.update(meta)
 
     def start(self, stage: str):
-        super(RegularTask, self).start()
+        self.start_time = time.time()
         self.current_stage = stage
 
     def finish(self):
-        super(RegularTask, self).finish()
+        self.finish_time = time.time()
         duration = self.finish_time - self.start_time
         log = TaskLog(
             self.current_stage, duration, self.start_time, self.finish_time)
         self.logs.append(log)
 
     def __repr__(self):
-        return super(RegularTask, self).__repr__(repr(self.meta))
+        return '%s(%s)' % (self.__class__.__name__, repr(self.meta))

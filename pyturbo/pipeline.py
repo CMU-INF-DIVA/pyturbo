@@ -3,7 +3,7 @@ from typing import List
 
 from .runtime import mp
 from .stage import Stage
-from .task import ControlCommand, ControlTask, RegularTask
+from .task import ControlCommand, ControlTask, Task
 from .worker import WorkerGroup
 
 
@@ -34,7 +34,7 @@ class SyncPipeline(Pipeline):
             yield task
             return
         current_result = self.stages[current_stage].process(task)
-        if isinstance(current_result, RegularTask):
+        if isinstance(current_result, Task):
             yield from self.run_task(current_result, current_stage + 1)
         else:
             for r in current_result:
