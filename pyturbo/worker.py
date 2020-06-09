@@ -2,7 +2,7 @@ from typing import Union
 
 from .runtime import mp
 from .stage import Stage
-from .task import ControlCommmand, ControlTask, RegularTask
+from .task import ControlCommand, ControlTask, RegularTask
 
 
 class WorkerGroup(object):
@@ -21,7 +21,10 @@ class WorkerGroup(object):
         self.control_barrier = mp.Barrier(stage.worker_num)
         self.processes = []
         for worker_id in range(stage.worker_num):
-            process = Worker(self, worker_id)
+            process = Worker(
+                stage, worker_id, job_queue, self.result_queue,
+                self.control_barrier,
+                next_stage.worker_num if next_stage is not None else 1)
             process.start()
             self.processes.append(process)
 
@@ -40,36 +43,42 @@ class Worker(mp.Process):
     One worker process.
     '''
 
-    def __init__(self, group: WorkerGroup, worker_id: int):
-        name = '%s-%d' % (group.stage.name, worker_id)
+    def __init__(self, stage: Stage, worker_id: int,
+                 job_queue: mp.Queue, result_queue: mp.Queue,
+                 control_barrier: mp.Barrier, next_worker_num: int):
+        name = '%s-%d' % (stage.__class__.__name__, worker_id)
         super(Worker, self).__init__(name=name)
-        self.control_sequence = 0
+        self.stage = stage
         self.worker_id = worker_id
-        self.group = group
+        self.job_queue = job_queue
+        self.result_queue = result_queue
+        self.control_barrier = control_barrier
+        self.next_worker_num = next_worker_num
 
     def control(self, task):
-        if task.command == ControlCommmand.End:
-            return
-        elif task.command == ControlCommmand.Reset:
+        if task.command == ControlCommand.End:
+            return True
+        elif task.command == ControlCommand.Reset:
             self.stage.reset()
-        pass_id = self.group.control_barrier.wait()
+        pass_id = self.control_barrier.wait()
         if pass_id == 0:
-            for _ in range(self.group.next_stage.worker_num):
-                self.group.result_queue.put(task)
+            for _ in range(self.next_worker_num):
+                self.result_queue.put(task)
 
     def run(self):
-        self.group.stage.init(self.worker_id)
+        self.stage.init(self.worker_id)
         while True:
             try:
-                task = self.group.job_queue.get()
+                task = self.job_queue.get()
             except (EOFError, FileNotFoundError, BrokenPipeError):
                 break
             if isinstance(task, ControlTask):
-                self.control(task.command)
+                if self.control(task):
+                    return
                 continue
-            result = self.group.stage.process(task)
+            result = self.stage.process(task)
             if isinstance(result, RegularTask):
-                self.group.result_queue.put(result)
+                self.result_queue.put(result)
             else:
                 for r in result:
-                    self.group.result_queue.put(r)
+                    self.result_queue.put(r)

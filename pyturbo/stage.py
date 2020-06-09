@@ -13,11 +13,9 @@ class Stage(object):
     If no resource is provided for allocation, defaults to max_worker or 1.
     '''
 
-    def __init__(self, name: str,
-                 resources: Union[None, Iterable[Resource]] = None,
+    def __init__(self, resources: Union[None, Iterable[Resource]] = None,
                  max_worker: Union[None, int] = None,
                  result_queue_size: int = 32):
-        self.name = name
         if resources is not None:
             self.resources = [dict(r) for r in zip(*resources)]
             self.worker_num = len(self.resources)
@@ -48,14 +46,14 @@ class Stage(object):
     def init(self, worker_id: int = 0):
         self.worker_id = worker_id
         self.current_resource = self.resources[worker_id]
-        name = '%s(%s)[%d]@%s' % (
-            self.__class__.__name__, self.name, self.worker_id,
-            self.current_resource)
+        name = '%s[%d]%s' % (self.__class__.__name__, worker_id,
+                             '@' + str(self.current_resource)
+                             if self.current_resource is not None else '')
         self.logger = get_logger(name)
         self.logger.debug('Init.')
         self.reset()
 
     def __repr__(self):
-        return '%s(%s)[%d]@%s' % (
-            self.__class__.__name__, self.name, self.worker_num,
-            self.resources)
+        return '%s[:%d]%s' % (
+            self.__class__.__name__, self.worker_num,
+            '@' + str(self.resources) if self.resources is not None else '')

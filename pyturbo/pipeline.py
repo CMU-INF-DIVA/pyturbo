@@ -3,7 +3,7 @@ from typing import List
 
 from .runtime import mp
 from .stage import Stage
-from .task import ControlCommmand, ControlTask, RegularTask
+from .task import ControlCommand, ControlTask, RegularTask
 from .worker import WorkerGroup
 
 
@@ -66,8 +66,13 @@ class AsyncPipeline(Pipeline):
             job_queue = group.result_queue
         self.result_queue = job_queue
 
+    def reset(self):
+        reset_task = ControlTask(ControlCommand.Reset)
+        for _ in range(self.stages[0].worker_num):
+            self.job_queue.put(reset_task)
+
     def end(self):
-        end_task = ControlTask(ControlCommmand.End)
+        end_task = ControlTask(ControlCommand.End)
         for _ in range(self.stages[0].worker_num):
             self.job_queue.put(end_task)
 
