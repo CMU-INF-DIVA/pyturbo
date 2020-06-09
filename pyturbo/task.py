@@ -29,7 +29,7 @@ class ControlTask(Task):
     '''
 
     def __init__(self, command: str, *,
-                 parent_task: Union[None, ControlTask] = None):
+                 parent_task: Union[None, Task] = None):
         super(ControlTask, self).__init__()
         self.command = command
         self.parent = parent_task
@@ -48,7 +48,7 @@ class RegularTask(Task):
     '''
 
     def __init__(self, content: Any, meta: Union[None, dict] = None, *,
-                 parent_task: Union[None, RegularTask] = None):
+                 parent_task: Union[None, Task] = None):
         super(RegularTask, self).__init__()
         self.content = content
         self._build_meta(meta, parent_task)
