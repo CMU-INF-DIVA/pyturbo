@@ -10,7 +10,7 @@ class Stage(object):
     '''
     One stage in a pipeline. A stage can have multiple peer worker processes.
     Worker number is desided based on available resources.
-    If no resource is provided for allocation, defaults to 1 worker.
+    If no resource is provided for allocation, defaults to max_worker or 1.
     '''
 
     def __init__(self, name: str,
@@ -21,12 +21,14 @@ class Stage(object):
         if resources is not None:
             self.resources = [dict(r) for r in zip(*resources)]
             self.worker_num = len(self.resources)
+            if max_worker is not None:
+                self.worker_num = min(self.worker_num, max_worker)
+                self.resources = self.resources[:self.worker_num]
         else:
-            self.resources = [None]
-            self.worker_num = 1
-        if max_worker is not None:
-            self.worker_num = min(self.worker_num, max_worker)
-            self.resources = self.resources[:self.worker_num]
+            if max_worker is None:
+                max_worker = 1
+            self.resources = [None] * max_worker
+            self.worker_num = max_worker
         self.result_queue_size = result_queue_size
         self.logger = None
 

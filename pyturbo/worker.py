@@ -25,6 +25,14 @@ class WorkerGroup(object):
             process.start()
             self.processes.append(process)
 
+    def join(self, timeout=1):
+        for process in self.processes:
+            process.join(timeout)
+
+    def terminate(self):
+        for process in self.processes:
+            process.terminate()
+
 
 class Worker(mp.Process):
 
