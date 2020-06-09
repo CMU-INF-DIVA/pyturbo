@@ -1,6 +1,7 @@
 import time
 from collections import namedtuple
-from typing import Union, Any
+from enum import IntEnum
+from typing import Any, Union
 
 
 class Task(object):
@@ -23,19 +24,20 @@ class Task(object):
         return '%s(%s)' % (self.__class__.__name__, info)
 
 
+ControlCommmand = IntEnum('ControlCommand', ['End', 'Reset'])
+
+
 class ControlTask(Task):
     '''
     Pipeline control task.
     '''
 
-    def __init__(self, command: str, *,
-                 parent_task: Union[None, Task] = None):
+    def __init__(self, command: ControlCommmand):
         super(ControlTask, self).__init__()
         self.command = command
-        self.parent = parent_task
 
     def __repr__(self):
-        return super(ControlTask, self).__repr__(self.command)
+        return super(ControlTask, self).__repr__(self.command.name)
 
 
 TaskLog = namedtuple('TaskLog', [

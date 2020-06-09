@@ -1,7 +1,7 @@
-from typing import Union, List
+from typing import Iterable, Union
 
-from .task import Task
 from .resource import Resource
+from .task import Task
 from .utils import get_logger
 
 
@@ -13,7 +13,8 @@ class Stage(object):
     If no resource is provided for allocation, defaults to 1 worker.
     '''
 
-    def __init__(self, name: str, resources: Union[None, List[Resource]] = None,
+    def __init__(self, name: str,
+                 resources: Union[None, Iterable[Resource]] = None,
                  max_worker: Union[None, int] = None,
                  result_queue_size: int = 32):
         self.name = name
@@ -33,17 +34,23 @@ class Stage(object):
         '''
         Reset a worker process. Automatically executed during initialization.
         '''
-        pass
+        self.logger.debug('Reset.')
 
-    def process(self, task: Task):
+    def process(self, task: Task) -> Union[Task, Iterable[Task]]:
         '''
-        Process function for each worker process
+        Process function for each worker process. 
+        Returns one or a series of downstream tasks.
         '''
         raise NotImplementedError
 
-    def _init(self, worker_id: int = 0):
-        self.logger = get_logger(repr(self))
+    def init(self, worker_id: int = 0):
+        self.worker_id = worker_id
         self.current_resource = self.resources[worker_id]
+        name = '%s(%s)[%d]@%s' % (
+            self.__class__.__name__, self.name, self.worker_id,
+            self.current_resource)
+        self.logger = get_logger(name)
+        self.logger.debug('Init.')
         self.reset()
 
     def __repr__(self):
