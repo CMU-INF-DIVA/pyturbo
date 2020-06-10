@@ -1,8 +1,9 @@
 import random
 import sys
 import time
-sys.path.insert(0, '/home/lijun/workspaces/pyturbo')
-from pyturbo import Job, ReorderStage, Stage, Task, System
+
+from pyturbo import Job, ReorderStage, Stage, System, Task
+
 
 class Stage1(Stage):
 
@@ -82,12 +83,9 @@ class ToySystem(System):
     (x, y) -> [*range(-x, -x - y, -1)]
     '''
 
-    def __init__(self):
-        super(ToySystem, self).__init__(num_pipeline=4)
-
     def get_stages(self, resources):
-        resources = resources.split(4)
         stages = [Stage1, Stage2, Stage3, Stage4]
+        resources = resources.split(len(stages))
         stages = [s(r) for s, r in zip(stages, resources)]
         return stages
 
@@ -96,8 +94,9 @@ class ToySystem(System):
         return results
 
 
-def main(n_job=9):
-    system = ToySystem()
+def main(num_pipeline=4, n_job=9):
+    system = ToySystem(num_pipeline)
+    system.start()
     for _ in range(n_job):
         x = random.randint(0, 9000)
         y = random.randint(200, 400)
@@ -105,7 +104,6 @@ def main(n_job=9):
         name = '%d_%d' % (x, y)
         job = Job(name, task, y)
         system.add_job(job)
-    system.start()
     for _ in range(9):
         job = system.result_queue.get()
         x, y = job.task.content

@@ -35,7 +35,7 @@ class System(object):
                  show_progress=True,
                  job_queue_size: int = -1,
                  pipeline_job_queue_size: int = 32,
-                 **resource_scan_args):
+                 resource_scan_args={}, pipeline_build_args={}):
         self.logger = get_logger(repr(self))
         self.num_pipeline = num_pipeline
         self.pipeline_fn = partial(
@@ -47,9 +47,10 @@ class System(object):
         self.show_progress = show_progress
         self.job_queue = Queue(job_queue_size)
         self.resources = Resources(**resource_scan_args)
+        self.logger.info('Available resources: %s', repr(self.resources))
         self.result_queue = Queue()
         self.job_count = 0
-        self.build()
+        self.build(**pipeline_build_args)
 
     def get_stages(self, resources) -> List[Stage]:
         '''
@@ -84,16 +85,21 @@ class System(object):
 
     def build(self, **pipeline_args):
         self.pipelines = []
-        for resources in self.resources.split(self.num_pipeline):
+        for pipeline_i, resources in enumerate(
+                self.resources.split(self.num_pipeline)):
             stages = self.get_stages(resources)
             pipeline = self.pipeline_fn(stages, **pipeline_args)
             self.pipelines.append(pipeline)
+            self.logger.info('Building pipeline %d: \n\t%s', pipeline_i,
+                             '\n\t'.join([repr(s) for s in stages]))
         self.monitor_threads = [Thread(target=self.monit_pipeline, args=(i,))
                                 for i in range(self.num_pipeline)]
-        self.progressbar = progressbar(
-            total=self.job_count, desc='Jobs', position=self.num_pipeline)
+        self.progressbar = None
 
     def start(self):
+        self.logger.info('Starting system')
+        self.progressbar = progressbar(
+            total=self.job_count, desc='Jobs', position=self.num_pipeline)
         for pipeline in self.pipelines:
             pipeline.start()
         for thread in self.monitor_threads:

@@ -17,16 +17,19 @@ class Stage(object):
     def __init__(self, resources: Union[None, Resources] = None,
                  max_worker: Union[None, int] = None,
                  result_queue_size: int = 32):
+        self.resources = resources
         if resources is not None:
-            self.resources = resources.allocate(self.get_resource_unit())
-            self.worker_num = len(self.resources)
+            self.resource_allocation = resources.allocate(
+                self.get_resource_unit())
+            self.worker_num = len(self.resource_allocation)
             if max_worker is not None:
                 self.worker_num = min(self.worker_num, max_worker)
-                self.resources = self.resources[:self.worker_num]
+                self.resource_allocation = self.resource_allocation[
+                    :self.worker_num]
         else:
             if max_worker is None:
                 max_worker = 1
-            self.resources = [{} for _ in range(max_worker)]
+            self.resource_allocation = [{} for _ in range(max_worker)]
             self.worker_num = max_worker
         self.result_queue_size = result_queue_size
         self.logger = None
@@ -35,7 +38,7 @@ class Stage(object):
         '''
         Resource requirement for each worker.
         '''
-        return {'cpu': 1}
+        return {'cpu': 0.1}
 
     def reset(self):
         '''
@@ -52,7 +55,7 @@ class Stage(object):
 
     def init(self, worker_id: int = 0):
         self.worker_id = worker_id
-        self.current_resource = self.resources[worker_id]
+        self.current_resource = self.resource_allocation[worker_id]
         name = '%s[%d]%s' % (self.__class__.__name__, worker_id,
                              '@' + str(self.current_resource)
                              if self.current_resource is not None else '')
@@ -64,12 +67,17 @@ class Stage(object):
         return self.process(task)
 
     def __repr__(self):
-        return '%s[:%d]%s' % (
+        return '%s(x%d)%s' % (
             self.__class__.__name__, self.worker_num,
             '@' + str(self.resources) if self.resources is not None else '')
 
 
 class ReorderStage(Stage):
+
+    '''
+    A special stage with only one worker. 
+    Tasks are processed according to a pre-defined order.
+    '''
 
     def __init__(self, resources: Union[None, Resources] = None,
                  result_queue_size: int = 32):

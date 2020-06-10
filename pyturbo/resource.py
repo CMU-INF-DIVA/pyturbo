@@ -1,5 +1,5 @@
 import os
-from itertools import repeat
+from itertools import cycle
 from typing import Any, Dict, List, Union
 
 try:
@@ -48,11 +48,11 @@ class Resources(object):
                     results[split_i][key] = value[
                         split_i * unit: (split_i + 1) * unit]
             else:
-                for split_i, v in zip(range(num_split),
-                                      repeat(value, int(1 / unit))):
+                for split_i, v in zip(range(num_split), cycle(value)):
                     results[split_i][key] = [v]
         results = [Resources(r) for r in results]
         return results
 
     def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, repr(self.resources))
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(
+            ['%s=%s' % (k, v) for k, v in self.resources.items()]))
