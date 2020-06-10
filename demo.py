@@ -67,7 +67,8 @@ class Stage4(ReorderStage):
         super(Stage4, self).__init__(resources)
 
     def get_sequence_id(self, task):
-        return task.content[0] - task.content[1]
+        x, x0 = task.content
+        return x - x0
 
     def process(self, task):
         time.sleep(0.01)
