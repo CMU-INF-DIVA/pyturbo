@@ -7,8 +7,8 @@ with open('requirements.txt') as f:
     requirements = f.readlines()
 
 setuptools.setup(
-    name='pyturbo',
-    version='0.1',
+    name='py-turbo',
+    version='0.1.1',
     author='Lijun Yu',
     author_email='lijun@lj-y.com',
     description='A pipeline system for efficient execution.',
