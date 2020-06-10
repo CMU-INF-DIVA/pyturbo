@@ -2,10 +2,7 @@ import os
 from itertools import cycle
 from typing import Any, Dict, List, Union
 
-try:
-    import GPUtil
-except:
-    GPUtil = None
+import GPUtil
 
 
 class Resources(object):
@@ -22,9 +19,10 @@ class Resources(object):
 
     def scan(self, gpu_load: float = 0.1, gpu_memory: float = 0.1):
         resources = {'cpu': [*range(os.cpu_count())]}
-        if GPUtil is not None:
-            resources['gpu'] = GPUtil.getAvailable(
-                limit=100, maxLoad=gpu_load, maxMemory=gpu_memory)
+        gpus = GPUtil.getAvailable(
+            limit=100, maxLoad=gpu_load, maxMemory=gpu_memory)
+        if len(gpus) > 0:
+            resources['gpu'] = gpus
         return resources
 
     def split(self, num_split: int):

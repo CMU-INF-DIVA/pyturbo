@@ -1,6 +1,9 @@
 import resource
 
 try:
+    '''
+    Prefer Pytorch's multiprocessing module for optimized sharing of Tensor
+    '''
     import torch.multiprocessing as mp
     try:
         resource.setrlimit(resource.RLIMIT_NOFILE, (1048576, 1048576))
