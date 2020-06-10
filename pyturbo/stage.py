@@ -77,7 +77,7 @@ class ReorderStage(Stage):
 
     def get_sequence_id(self, task: Task) -> int:
         '''
-        Return the order of each task
+        Return the order of each task. Start from 0.
         '''
         raise NotImplementedError
 

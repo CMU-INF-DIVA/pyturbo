@@ -12,6 +12,10 @@ from .utils import get_logger, progressbar
 
 class Job(object):
 
+    '''
+    A job for the system. A job is a wrapper over a task for the first stage.
+    '''
+
     def __init__(self, name: str, task: Task, length: Union[None, int] = None):
         self.name = name
         self.task = task
@@ -22,6 +26,10 @@ class Job(object):
 
 
 class System(object):
+
+    '''
+    A system consists of multiple peer pipelines.
+    '''
 
     def __init__(self, num_pipeline: int = 1, debug=False,
                  show_progress=True,
@@ -40,6 +48,7 @@ class System(object):
         self.job_queue = Queue(job_queue_size)
         self.resources = Resources(**resource_scan_args)
         self.result_queue = Queue()
+        self.job_count = 0
         self.build()
 
     def get_stages(self, resources) -> List[Stage]:
@@ -54,7 +63,7 @@ class System(object):
         '''
         raise NotImplementedError
 
-    def monitor(self, pipeline_id):
+    def monit_pipeline(self, pipeline_id):
         pipeline = self.pipelines[pipeline_id]
         while True:
             job = self.job_queue.get()
@@ -65,11 +74,13 @@ class System(object):
             results_gen = pipeline.wait()
             if self.show_progress:
                 results_gen = progressbar(
-                    results_gen, desc=' P%d(%s)' % (pipeline_id, job.name),
-                    total=job.length, position=pipeline_id)
+                    results_gen,
+                    desc=' Pipeline-%d(%s)' % (pipeline_id, job.name),
+                    total=job.length, position=pipeline_id, leave=False)
             results = self.get_results(results_gen)
             job.finish(results)
             self.result_queue.put(job)
+            self.progressbar.update()
 
     def build(self, **pipeline_args):
         self.pipelines = []
@@ -77,14 +88,22 @@ class System(object):
             stages = self.get_stages(resources)
             pipeline = self.pipeline_fn(stages, **pipeline_args)
             self.pipelines.append(pipeline)
-        self.monitor_threads = [Thread(target=self.monitor, args=(i,))
+        self.monitor_threads = [Thread(target=self.monit_pipeline, args=(i,))
                                 for i in range(self.num_pipeline)]
+        self.progressbar = progressbar(
+            total=self.job_count, desc='Jobs', position=self.num_pipeline)
 
     def start(self):
         for pipeline in self.pipelines:
             pipeline.start()
         for thread in self.monitor_threads:
             thread.start()
+
+    def add_job(self, job):
+        self.job_queue.put(job)
+        self.job_count += 1
+        self.progressbar.total = self.job_count
+        self.progressbar.refresh()
 
     def end(self):
         for pipeline in self.pipelines:
@@ -95,12 +114,14 @@ class System(object):
             self.job_queue.put(None)
         for thread in self.monitor_threads:
             thread.join()
+        self.progressbar.close()
 
     def terminate(self):
         for pipeline in self.pipelines:
             pipeline.terminate()
         for thread in self.monitor_threads:
             thread.terminate()
+        self.progressbar.close()
 
     def __repr__(self):
         return self.__class__.__name__
