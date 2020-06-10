@@ -1,7 +1,7 @@
 from collections import deque
 from typing import Iterable, Union
 
-from .resource import Resource
+from .resource import Resources
 from .task import Task
 from .utils import get_logger
 
@@ -14,11 +14,11 @@ class Stage(object):
     If no resource is provided for allocation, defaults to max_worker or 1.
     '''
 
-    def __init__(self, resources: Union[None, Iterable[Resource]] = None,
+    def __init__(self, resources: Union[None, Resources] = None,
                  max_worker: Union[None, int] = None,
                  result_queue_size: int = 32):
         if resources is not None:
-            self.resources = [dict(r) for r in zip(*resources)]
+            self.resources = resources.allocate(self.get_resource_unit())
             self.worker_num = len(self.resources)
             if max_worker is not None:
                 self.worker_num = min(self.worker_num, max_worker)
@@ -26,10 +26,16 @@ class Stage(object):
         else:
             if max_worker is None:
                 max_worker = 1
-            self.resources = [None] * max_worker
+            self.resources = [{} for _ in range(max_worker)]
             self.worker_num = max_worker
         self.result_queue_size = result_queue_size
         self.logger = None
+
+    def get_resource_unit(self):
+        '''
+        Resource requirement for each worker.
+        '''
+        return {'cpu': 1}
 
     def reset(self):
         '''
@@ -65,8 +71,9 @@ class Stage(object):
 
 class ReorderStage(Stage):
 
-    def __init__(self, result_queue_size: int = 32):
-        super(ReorderStage, self).__init__(None, 1, result_queue_size)
+    def __init__(self, resources: Union[None, Resources] = None,
+                 result_queue_size: int = 32):
+        super(ReorderStage, self).__init__(resources, 1, result_queue_size)
 
     def get_sequence_id(self, task: Task) -> int:
         '''

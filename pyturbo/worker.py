@@ -25,8 +25,11 @@ class WorkerGroup(object):
                 stage, worker_id, job_queue, self.result_queue,
                 self.control_barrier,
                 next_stage.worker_num if next_stage is not None else 1)
-            process.start()
             self.processes.append(process)
+
+    def start(self):
+        for process in self.processes:
+            process.start()
 
     def join(self, timeout=1):
         for process in self.processes:
@@ -56,14 +59,14 @@ class Worker(mp.Process):
         self.next_worker_num = next_worker_num
 
     def control(self, task):
-        if task.command == ControlCommand.End:
-            return True
-        elif task.command == ControlCommand.Reset:
+        if task.command == ControlCommand.Reset:
             self.stage.reset()
         pass_id = self.control_barrier.wait()
         if pass_id == 0:
             for _ in range(self.next_worker_num):
                 self.result_queue.put(task)
+        if task.command == ControlCommand.End:
+            return True
 
     def run(self):
         self.stage.init(self.worker_id)

@@ -26,7 +26,9 @@ class SyncPipeline(Pipeline):
 
     def __init__(self,  stages: List[Stage]):
         super(SyncPipeline, self).__init__(stages)
-        for stage in stages:
+
+    def start(self):
+        for stage in self.stages:
             stage.init()
 
     def run_task(self, task, current_stage=0):
@@ -66,15 +68,30 @@ class AsyncPipeline(Pipeline):
             job_queue = group.result_queue
         self.result_queue = job_queue
 
+    def start(self):
+        for group in self.worker_groups:
+            group.start()
+
     def reset(self):
         reset_task = ControlTask(ControlCommand.Reset)
         for _ in range(self.stages[0].worker_num):
             self.job_queue.put(reset_task)
 
+    def wait(self):
+        control_task_count = self.stages[-1].worker_num
+        while control_task_count > 0:
+            result = self.result_queue.get()
+            if isinstance(result, Task):
+                yield result
+            else:
+                control_task_count -= 1
+
     def end(self):
         end_task = ControlTask(ControlCommand.End)
         for _ in range(self.stages[0].worker_num):
             self.job_queue.put(end_task)
+        for _ in self.wait():
+            pass
 
     def join(self, timeout=1):
         for group in self.worker_groups:
