@@ -27,7 +27,7 @@ pip install py-turbo
 * Result: output of a job processed by one pipeline, typically a set of output tasks from the last stage.
 * System: a set of peer pipelines processing the same type of jobs.
 
-![abstract.png](docs/abstract.png)
+![abstract.png](https://github.com/Lijun-Yu/pyturbo/raw/master/docs/abstract.png)
 
 ## Get Started
 
@@ -70,10 +70,10 @@ def main():
 
 ## Demo
 
-![abstract.png](docs/demo.gif)
+![abstract.png](https://github.com/Lijun-Yu/pyturbo/raw/master/docs/demo.gif)
 
 See [demo.py](demo.py) for an example implementation.
 
 ## Version History
 
-See [version.md](docs/version.md).
+See [version.md](https://github.com/Lijun-Yu/pyturbo/raw/master/docs/version.md).
