@@ -64,6 +64,7 @@ class Stage(object):
         self.reset()
 
     def run(self, task):
+        # self.logger.debug('Process: %s', task)
         return self.process(task)
 
     def __repr__(self):
@@ -106,10 +107,12 @@ class ReorderStage(Stage):
             if self.reorder_buffer[0] is not None:
                 task = self.reorder_buffer.popleft()
                 yield task
+                self.next_id = self.get_sequence_id(task) + 1
 
     def run(self, task):
         self.push(task)
         for task in self.iter_pop():
+            self.logger.debug('Process: %s', task)
             res = self.process(task)
             if isinstance(res, Task):
                 yield res

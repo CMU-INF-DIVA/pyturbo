@@ -19,7 +19,7 @@ class Stage1(Stage):
         for i in range(y):
             time.sleep(0.02)
             content = (x + i, x)
-            result = Task(content, parent_task=task)
+            result = Task(content, {'i': i}, parent_task=task)
             yield result
 
 
@@ -101,7 +101,7 @@ def main(num_pipeline=4, n_job=9):
     for _ in range(n_job):
         x = random.randint(0, 9000)
         y = random.randint(200, 400)
-        task = Task((x, y))
+        task = Task((x, y), {'x': x, 'y': y})
         name = '%d_%d' % (x, y)
         job = Job(name, task, y)
         system.add_job(job)

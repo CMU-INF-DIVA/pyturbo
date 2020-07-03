@@ -35,7 +35,7 @@ class SyncPipeline(Pipeline):
         if current_stage == len(self.stages):
             yield task
             return
-        current_result = self.stages[current_stage].process(task)
+        current_result = self.stages[current_stage].run(task)
         if isinstance(current_result, Task):
             yield from self.run_task(current_result, current_stage + 1)
         else:

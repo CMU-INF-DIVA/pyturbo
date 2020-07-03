@@ -79,7 +79,7 @@ class Worker(mp.Process):
                 if self.control(task):
                     return
                 continue
-            result = self.stage.process(task)
+            result = self.stage.run(task)
             if isinstance(result, Task):
                 self.result_queue.put(result)
             else:
