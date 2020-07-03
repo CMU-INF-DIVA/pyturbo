@@ -41,7 +41,8 @@ class System(object):
         self.pipeline_fn = partial(
             AsyncPipeline, job_queue_size=pipeline_job_queue_size)
         if debug:
-            self.logger.info('Debug mode: one SyncPipeline in single process.')
+            self.logger.info(
+                'Debug mode: one SyncPipeline in a single process.')
             self.num_pipeline = 1
             self.pipeline_fn = SyncPipeline
         self.show_progress = show_progress
@@ -70,15 +71,20 @@ class System(object):
             job = self.job_queue.get()
             if job is None:
                 return
-            pipeline.job_queue.put(job.task)
-            pipeline.reset()
-            results_gen = pipeline.wait()
+            if isinstance(pipeline, AsyncPipeline):
+                pipeline.job_queue.put(job.task)
+                pipeline.reset()
+                results_gen = pipeline.wait()
+            elif isinstance(pipeline, SyncPipeline):
+                results_gen = pipeline.run_task(job.task)
             if self.show_progress:
                 results_gen = progressbar(
                     results_gen,
                     desc=' Pipeline-%d(%s)' % (pipeline_id, job.name),
                     total=job.length, position=pipeline_id, leave=False)
             results = self.get_results(results_gen)
+            if isinstance(pipeline, SyncPipeline):
+                pipeline.reset()
             job.finish(results)
             self.result_queue.put(job)
             self.progressbar.update()
@@ -112,6 +118,7 @@ class System(object):
         self.progressbar.refresh()
 
     def end(self):
+        self.logger.info('Ending system')
         for pipeline in self.pipelines:
             pipeline.end()
         for pipeline in self.pipelines:
@@ -123,6 +130,7 @@ class System(object):
         self.progressbar.close()
 
     def terminate(self):
+        self.logger.info('Terminating system')
         for pipeline in self.pipelines:
             pipeline.terminate()
         for thread in self.monitor_threads:

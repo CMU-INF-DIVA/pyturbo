@@ -46,6 +46,19 @@ class SyncPipeline(Pipeline):
         for task in tasks:
             yield from self.run_task(task)
 
+    def reset(self):
+        for stage in self.stages:
+            stage.reset()
+
+    def end(self):
+        return
+
+    def join(self, timeout=1):
+        return
+
+    def terminate(self):
+        return
+
 
 class AsyncPipeline(Pipeline):
 

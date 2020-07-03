@@ -61,7 +61,7 @@ class MySystem(System):
         ... # Define how to extract final results from output tasks.
 
 def main():
-    system = MySystem(num_pipeline)
+    system = MySystem(num_pipeline) # Set debug=True to run in a single process
     system.start() # Build and start system
     system.add_job(...) # Submit one job
     finished_job = system.result_queue.get() # Wait for result

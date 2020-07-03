@@ -95,8 +95,8 @@ class ToySystem(System):
         return results
 
 
-def main(num_pipeline=4, n_job=9):
-    system = ToySystem(num_pipeline)
+def main(num_pipeline=4, n_job=9, **system_args):
+    system = ToySystem(num_pipeline, **system_args)
     system.start()
     for _ in range(n_job):
         x = random.randint(0, 9000)
@@ -114,3 +114,4 @@ def main(num_pipeline=4, n_job=9):
 
 if __name__ == "__main__":
     main()
+    main(debug=True)

@@ -64,7 +64,9 @@ class Stage(object):
         self.reset()
 
     def run(self, task):
-        # self.logger.debug('Process: %s', task)
+        assert isinstance(task, Task), '%s is not a subclass of %s' % (
+            type(task), Task)
+        self.logger.debug('Process: %s', task)
         return self.process(task)
 
     def __repr__(self):
@@ -81,8 +83,9 @@ class ReorderStage(Stage):
     '''
 
     def __init__(self, resources: Union[None, Resources] = None,
-                 result_queue_size: int = 32):
+                 result_queue_size: int = 32, reorder_buffer_size: int = 128):
         super(ReorderStage, self).__init__(resources, 1, result_queue_size)
+        self.reorder_buffer_size = reorder_buffer_size
 
     def get_sequence_id(self, task: Task) -> int:
         '''
@@ -101,6 +104,10 @@ class ReorderStage(Stage):
             self.reorder_buffer.extend([None] * (
                 offset - len(self.reorder_buffer) + 1))
         self.reorder_buffer[offset] = task
+        if len(self.reorder_buffer) > self.reorder_buffer_size:
+            self.logger.warn(
+                'Reorder buffer size %d exceeds limit of %d',
+                len(self.reorder_buffer), self.reorder_buffer_size)
 
     def iter_pop(self):
         while len(self.reorder_buffer) > 0:
@@ -110,6 +117,8 @@ class ReorderStage(Stage):
                 self.next_id = self.get_sequence_id(task) + 1
 
     def run(self, task):
+        assert isinstance(task, Task)
+        self.logger.debug('Enqueue: %s', task)
         self.push(task)
         for task in self.iter_pop():
             self.logger.debug('Process: %s', task)
