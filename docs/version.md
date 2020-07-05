@@ -1,6 +1,6 @@
 # Version History
 
-## v0.2
+## v0.2.1
 
 - Fix reorder stage and sync pipeline.
 - Debug modes and task logs.
