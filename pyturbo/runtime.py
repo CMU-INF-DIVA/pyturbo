@@ -14,4 +14,4 @@ except:
     import multiprocessing as mp
 
 mp = mp.get_context('spawn')
-debug = bool(os.environ.get('DEBUG'))
+debug = os.environ.get('DEBUG') # log pipeline exception

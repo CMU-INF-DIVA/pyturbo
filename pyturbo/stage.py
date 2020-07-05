@@ -80,7 +80,7 @@ class Stage(object):
             self.logger.warn('Stopped before complete: %s', task)
         except Exception as e:
             self.logger.exception('Failed: %s', task)
-            if debug:
+            if 'exception' in debug:
                 raise e
 
     def __repr__(self):
