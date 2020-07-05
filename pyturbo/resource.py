@@ -1,6 +1,6 @@
 import os
 from itertools import cycle
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Tuple
 
 import GPUtil
 
@@ -17,7 +17,13 @@ class Resources(object):
         else:
             self.resources = self.scan(**scan_args)
 
+    def get(self, name: str, limit: Union[None, int] = None):
+        return self.resources.get(name, [])[:limit]
+
     def scan(self, gpu_load: float = 0.1, gpu_memory: float = 0.1):
+        '''
+        Initial global scan for a system.
+        '''
         resources = {'cpu': [*range(os.cpu_count())]}
         gpus = GPUtil.getAvailable(
             limit=100, maxLoad=gpu_load, maxMemory=gpu_memory)
@@ -26,6 +32,9 @@ class Resources(object):
         return resources
 
     def split(self, num_split: int):
+        '''
+        Even split between pipelines in a system.
+        '''
         results = [{} for _ in range(num_split)]
         for key, value in self.resources.items():
             split_size = len(value) // num_split
@@ -35,7 +44,30 @@ class Resources(object):
         results = [Resources(r) for r in results]
         return results
 
+    def select(self, **select_dict):
+        '''
+        Unbalanced select for stages in a pipeline.
+        select_dict value: True for all, False for None, 
+            (start, end) in int/float/None for slice
+        '''
+        selected_resources = {}
+        for key, value in select_dict.items():
+            if not key in self.resources:
+                continue
+            resource = self.resources[key]
+            if value is True:
+                selected_resources[key] = resource
+            elif value is False:
+                continue
+            else:
+                start, end = self._index_or_frac(value, len(resource))
+                selected_resources[key] = resource[start:end]
+        return Resources(selected_resources)
+
     def allocate(self, resource_unit: Dict[str, Union[int, float]]):
+        '''
+        Allocate for workers according to resource_unit in a stage.
+        '''
         num_split = min([int(len(self.resources[key]) / unit)
                          for key, unit in resource_unit.items()])
         results = [{} for _ in range(num_split)]
@@ -50,6 +82,14 @@ class Resources(object):
                     results[split_i][key] = [v]
         results = [Resources(r) for r in results]
         return results
+
+    @staticmethod
+    def _index_or_frac(values, length):
+        is_float = any([isinstance(value, float) for value in values])
+        if not is_float:
+            return values
+        return [int(round(value * length)) if value is not None else None
+                for value in values]
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(

@@ -27,8 +27,8 @@ class Task(object):
     Regular excutable task.
     '''
 
-    def __init__(self, content: Any, meta: Union[None, dict] = None, *,
-                 parent_task=None):
+    def __init__(self, content: Any = None, meta: Union[None, dict] = None,
+                 *, parent_task=None):
         self.create_time = time.time()
         self.content = content
         self._build_meta(meta, parent_task)
@@ -41,16 +41,20 @@ class Task(object):
         if meta is not None:
             self.meta.update(meta)
 
-    def start(self, stage: str):
+    def start(self, stage: Any):
         self.start_time = time.time()
-        self.current_stage = stage
+        self.current_stage = str(stage)
+        return self
 
-    def finish(self):
+    def finish(self, content: Any = None):
         self.finish_time = time.time()
+        if content is not None:
+            self.content = content
         duration = self.finish_time - self.start_time
         log = TaskLog(
             self.current_stage, duration, self.start_time, self.finish_time)
         self.logs.append(log)
+        return self
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, repr(self.meta))

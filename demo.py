@@ -17,10 +17,11 @@ class Stage1(Stage):
     def process(self, task):
         x, y = task.content
         for i in range(y):
-            time.sleep(0.02)
-            content = (x + i, x)
-            result = Task(content, {'i': i}, parent_task=task)
-            yield result
+            sub_task = Task(meta={'i': i}, parent_task=task).start(self)
+            time.sleep(0.02)  # Fake process time
+            result = x + i
+            sub_task.finish(result)
+            yield sub_task
 
 
 class Stage2(Stage):
@@ -33,10 +34,11 @@ class Stage2(Stage):
         super(Stage2, self).__init__(resources, max_worker=4)
 
     def process(self, task):
-        time.sleep(0.005)
-        x, x0 = task.content
-        result = (x * 7, x0)
-        task = Task(result, parent_task=task)
+        task.start(self)
+        time.sleep(0.005)  # Fake process time
+        x = task.content
+        result = x * 7
+        task.finish(result)
         return task
 
 
@@ -50,10 +52,11 @@ class Stage3(Stage):
         super(Stage3, self).__init__(resources, max_worker=2)
 
     def process(self, task):
-        time.sleep(0.01)
-        x, x0 = task.content
-        result = (int(x / 7), x0)
-        task = Task(result, parent_task=task)
+        task.start(self)
+        time.sleep(0.01)  # Fake process time
+        x = task.content
+        result = int(x / 7)
+        task.finish(result)
         return task
 
 
@@ -67,14 +70,14 @@ class Stage4(ReorderStage):
         super(Stage4, self).__init__(resources)
 
     def get_sequence_id(self, task):
-        x, x0 = task.content
-        return x - x0
+        return task.meta['i']
 
     def process(self, task):
-        time.sleep(0.01)
-        x = task.content[0]
+        task.start(self)
+        time.sleep(0.01)  # Fake process time
+        x = task.content
         result = -x
-        task = Task(result, parent_task=task)
+        task.finish(result)
         return task
 
 
@@ -85,14 +88,13 @@ class ToySystem(System):
     '''
 
     def get_stages(self, resources):
-        stages = [Stage1, Stage2, Stage3, Stage4]
-        resources = resources.split(len(stages))
-        stages = [s(r) for s, r in zip(stages, resources)]
+        stages = [
+            Stage1(resources.select(cpu=(0, 1), gpu=False)),
+            Stage2(resources.select(cpu=(1, 3), gpu=True)),
+            Stage3(resources.select(cpu=(0.6, 0.9))),
+            Stage4(resources.select(cpu=(-0.2, None)))
+        ]
         return stages
-
-    def get_results(self, results_gen):
-        results = [task.content for task in results_gen]
-        return results
 
 
 def main(num_pipeline=4, n_job=9, **system_args):

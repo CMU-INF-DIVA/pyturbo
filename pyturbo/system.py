@@ -63,7 +63,10 @@ class System(object):
         '''
         Define how to extract final results from output tasks.
         '''
-        raise NotImplementedError
+        results = []
+        for task in results_gen:
+            results.append(task.content)
+        return results
 
     def monit_pipeline(self, pipeline_id):
         pipeline = self.pipelines[pipeline_id]

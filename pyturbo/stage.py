@@ -2,6 +2,7 @@ from collections import deque
 from typing import Iterable, Union
 
 from .resource import Resources
+from .runtime import debug
 from .task import Task
 from .utils import get_logger
 
@@ -38,7 +39,7 @@ class Stage(object):
         '''
         Resource requirement for each worker.
         '''
-        return {'cpu': 0.1}
+        return {'cpu': 0.01}
 
     def reset(self):
         '''
@@ -66,8 +67,21 @@ class Stage(object):
     def run(self, task):
         assert isinstance(task, Task), '%s is not a subclass of %s' % (
             type(task), Task)
-        self.logger.debug('Process: %s', task)
-        return self.process(task)
+        try:
+            self.logger.debug('Processing: %s', task)
+            result = self.process(task)
+            if isinstance(result, Task):
+                yield result
+            else:
+                for res in result:
+                    yield res
+            self.logger.debug('Processed: %s', task)
+        except GeneratorExit:
+            self.logger.warn('Stopped before complete: %s', task)
+        except Exception as e:
+            self.logger.exception('Failed: %s', task)
+            if debug:
+                raise e
 
     def __repr__(self):
         return '%s(x%d)%s' % (
@@ -121,10 +135,16 @@ class ReorderStage(Stage):
         self.logger.debug('Enqueue: %s', task)
         self.push(task)
         for task in self.iter_pop():
-            self.logger.debug('Process: %s', task)
-            res = self.process(task)
-            if isinstance(res, Task):
-                yield res
-            else:
-                for r in res:
-                    yield r
+            try:
+                self.logger.debug('Processing: %s', task)
+                result = self.process(task)
+                if isinstance(result, Task):
+                    yield result
+                else:
+                    for res in result:
+                        yield res
+                self.logger.debug('Processed: %s', task)
+            except GeneratorExit:
+                self.logger.warn('Stopped before complete: %s', task)
+            except Exception:
+                self.logger.exception('Failed: %s', task)
