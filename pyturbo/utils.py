@@ -4,14 +4,14 @@ from functools import partial
 
 from tqdm.autonotebook import tqdm
 
-from .runtime import debug
+from .runtime import DevModes
 
 progressbar = partial(tqdm, dynamic_ncols=True)
 
 
 def get_logger(name, level=None, log_file=None):
     if level is None:
-        level = logging.INFO if not 'log' in debug else logging.DEBUG
+        level = logging.INFO if not 'log' in DevModes else logging.DEBUG
     logger = logging.getLogger(name)
     logger.setLevel(level)
     if len(logger.handlers) > 0:

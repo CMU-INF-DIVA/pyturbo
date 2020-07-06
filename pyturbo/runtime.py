@@ -14,4 +14,4 @@ except:
     import multiprocessing as mp
 
 mp = mp.get_context('spawn')
-debug = os.environ.get('DEBUG', '') # log pipeline exception
+DevModes = set(os.environ.get('PYTURBO_DEV', '').split())

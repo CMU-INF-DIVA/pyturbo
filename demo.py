@@ -2,7 +2,7 @@ import random
 import sys
 import time
 
-from pyturbo import Job, ReorderStage, Stage, System, Task
+from pyturbo import Job, ReorderStage, Stage, System, Task, DevModes
 
 
 class Stage1(Stage):
@@ -115,4 +115,6 @@ def main(num_pipeline=4, n_job=9):
 
 
 if __name__ == "__main__":
+    main()
+    DevModes.add('pipeline')
     main()

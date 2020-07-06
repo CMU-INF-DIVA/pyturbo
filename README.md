@@ -1,7 +1,7 @@
 # Pyturbo Package
 
 [![PyPI version](https://badge.fury.io/py/py-turbo.svg)](https://badge.fury.io/py/py-turbo)
-![Publish to PyPI](https://github.com/Lijun-Yu/pyturbo/workflows/Publish%20to%20PyPI/badge.svg)
+![Publish to PyPI](https://github.com/CMU-INF-DIVA/pyturbo/workflows/Publish%20to%20PyPI/badge.svg)
 
 Author: Lijun Yu
 
@@ -27,7 +27,7 @@ pip install py-turbo
 * Result: output of a job processed by one pipeline, typically a set of output tasks from the last stage.
 * System: a set of peer pipelines processing the same type of jobs.
 
-![abstract.png](https://github.com/Lijun-Yu/pyturbo/raw/master/docs/abstract.png)
+![abstract.png](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/abstract.png)
 
 ## Get Started
 
@@ -70,10 +70,14 @@ def main():
 
 ## Demo
 
-![abstract.png](https://github.com/Lijun-Yu/pyturbo/raw/master/docs/demo.gif)
+![abstract.png](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/demo.gif)
 
 See [demo.py](demo.py) for an example implementation.
 
+## Development Modes
+
+See [develop.md](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/develop.md)
+
 ## Version History
 
-See [version.md](https://github.com/Lijun-Yu/pyturbo/raw/master/docs/version.md).
+See [version.md](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/version.md).

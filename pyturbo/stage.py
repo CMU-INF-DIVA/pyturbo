@@ -2,7 +2,7 @@ from collections import deque
 from typing import Iterable, Union
 
 from .resource import Resources
-from .runtime import debug
+from .runtime import DevModes
 from .task import Task
 from .utils import get_logger
 
@@ -80,7 +80,7 @@ class Stage(object):
             self.logger.warn('Stopped before complete: %s', task)
         except Exception as e:
             self.logger.exception('Failed: %s', task)
-            if 'exception' in debug:
+            if 'exception' in DevModes:
                 raise e
 
     def __repr__(self):

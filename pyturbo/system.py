@@ -5,7 +5,7 @@ from typing import Any, List, Union
 
 from .pipeline import AsyncPipeline, SyncPipeline
 from .resource import Resources
-from .runtime import debug
+from .runtime import DevModes
 from .stage import Stage
 from .task import Task
 from .utils import get_logger, progressbar
@@ -41,7 +41,7 @@ class System(object):
         self.num_pipeline = num_pipeline
         self.pipeline_fn = partial(
             AsyncPipeline, job_queue_size=pipeline_job_queue_size)
-        self.debug = 'pipeline' in debug
+        self.debug = 'pipeline' in DevModes
         if self.debug:
             self.logger.info(
                 'Debug mode: one SyncPipeline in a single process.')
