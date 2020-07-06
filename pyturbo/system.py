@@ -1,7 +1,7 @@
 from functools import partial
 from queue import Queue
 from threading import Thread
-from typing import Any, List, Union
+from typing import Any, Iterable, List, Union
 
 from .pipeline import AsyncPipeline, SyncPipeline
 from .resource import Resources
@@ -55,13 +55,13 @@ class System(object):
         self.job_count = 0
         self.build(**pipeline_build_args)
 
-    def get_stages(self, resources) -> List[Stage]:
+    def get_stages(self, resources: Resources) -> List[Stage]:
         '''
         Define the stages in a pipeline with given resources.
         '''
         raise NotImplementedError
 
-    def get_results(self, results_gen) -> List[Any]:
+    def get_results(self, job: Job, results_gen: Iterable) -> List[Any]:
         '''
         Define how to extract final results from output tasks.
         '''
@@ -70,7 +70,7 @@ class System(object):
             results.append(task.content)
         return results
 
-    def monit_pipeline(self, pipeline_id):
+    def monit_pipeline(self, pipeline_id: int):
         pipeline = self.pipelines[pipeline_id]
         while True:
             job = self.job_queue.get()
@@ -87,7 +87,7 @@ class System(object):
                     results_gen,
                     desc=' Pipeline-%d(%s)' % (pipeline_id, job.name),
                     total=job.length, position=pipeline_id, leave=False)
-            results = self.get_results(results_gen)
+            results = self.get_results(job, results_gen)
             if isinstance(pipeline, SyncPipeline):
                 pipeline.reset()
             job.finish(results)
@@ -119,7 +119,7 @@ class System(object):
             for thread in self.monitor_threads:
                 thread.start()
 
-    def add_job(self, job):
+    def add_job(self, job: Job):
         self.job_queue.put(job)
         self.job_count += 1
         self.progressbar.total = self.job_count

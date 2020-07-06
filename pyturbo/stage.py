@@ -146,5 +146,7 @@ class ReorderStage(Stage):
                 self.logger.debug('Processed: %s', task)
             except GeneratorExit:
                 self.logger.warn('Stopped before complete: %s', task)
-            except Exception:
+            except Exception as e:
                 self.logger.exception('Failed: %s', task)
+                if 'exception' in DevModes:
+                    raise e

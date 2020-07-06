@@ -1,5 +1,9 @@
 # Version History
 
+## v0.2.2
+
+- Debug mode control.
+
 ## v0.2.1
 
 - Fix reorder stage and sync pipeline.
