@@ -3,7 +3,9 @@
 ## v0.2.3
 
 - Fault handler.
+- Fix reorder stage.
 - Set number of pipelines.
+- Allocate resource for workers.
 
 ## v0.2.2
 

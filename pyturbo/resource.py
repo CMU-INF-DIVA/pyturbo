@@ -33,7 +33,7 @@ class Resources(object):
 
     def split(self, num_split: int):
         '''
-        Even split between pipelines in a system.
+        Even split between pipelines in a system, drop remainders.
         '''
         results = [{} for _ in range(num_split)]
         for key, value in self.resources.items():
@@ -63,25 +63,6 @@ class Resources(object):
                 start, end = self._index_or_frac(value, len(resource))
                 selected_resources[key] = resource[start:end]
         return Resources(selected_resources)
-
-    def allocate(self, resource_unit: Dict[str, Union[int, float]]):
-        '''
-        Allocate for workers according to resource_unit in a stage.
-        '''
-        num_split = min([int(len(self.resources[key]) / unit)
-                         for key, unit in resource_unit.items()])
-        results = [{} for _ in range(num_split)]
-        for key, unit in resource_unit.items():
-            value = self.resources[key]
-            if isinstance(unit, int):
-                for split_i in range(num_split):
-                    results[split_i][key] = value[
-                        split_i * unit: (split_i + 1) * unit]
-            else:
-                for split_i, v in zip(range(num_split), cycle(value)):
-                    results[split_i][key] = [v]
-        results = [Resources(r) for r in results]
-        return results
 
     @staticmethod
     def _index_or_frac(values, length):

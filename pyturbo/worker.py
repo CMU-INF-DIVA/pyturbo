@@ -18,13 +18,13 @@ class WorkerGroup(object):
         self.job_queue = job_queue
         self.manager = manager
         self.result_queue = manager.Queue()
-        self.control_barrier = mp.Barrier(stage.worker_num)
+        self.control_barrier = mp.Barrier(stage.num_worker)
         self.processes = []
-        for worker_id in range(stage.worker_num):
+        for worker_id in range(stage.num_worker):
             process = Worker(
                 stage, worker_id, job_queue, self.result_queue,
                 self.control_barrier,
-                next_stage.worker_num if next_stage is not None else 1)
+                next_stage.num_worker if next_stage is not None else 1)
             self.processes.append(process)
 
     def start(self):
@@ -48,7 +48,7 @@ class Worker(mp.Process):
 
     def __init__(self, stage: Stage, worker_id: int,
                  job_queue: mp.Queue, result_queue: mp.Queue,
-                 control_barrier: mp.Barrier, next_worker_num: int):
+                 control_barrier: mp.Barrier, next_num_worker: int):
         name = '%s-%d' % (stage.__class__.__name__, worker_id)
         super(Worker, self).__init__(name=name)
         self.stage = stage
@@ -56,14 +56,14 @@ class Worker(mp.Process):
         self.job_queue = job_queue
         self.result_queue = result_queue
         self.control_barrier = control_barrier
-        self.next_worker_num = next_worker_num
+        self.next_num_worker = next_num_worker
 
     def control(self, task):
         if task.command == ControlCommand.Reset:
             self.stage.reset()
         pass_id = self.control_barrier.wait()
         if pass_id == 0:
-            for _ in range(self.next_worker_num):
+            for _ in range(self.next_num_worker):
                 self.result_queue.put(task)
         if task.command == ControlCommand.End:
             return True

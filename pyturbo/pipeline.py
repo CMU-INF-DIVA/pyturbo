@@ -87,11 +87,11 @@ class AsyncPipeline(Pipeline):
 
     def reset(self):
         reset_task = ControlTask(ControlCommand.Reset)
-        for _ in range(self.stages[0].worker_num):
+        for _ in range(self.stages[0].num_worker):
             self.job_queue.put(reset_task)
 
     def wait(self):
-        control_task_count = self.stages[-1].worker_num
+        control_task_count = self.stages[-1].num_worker
         while control_task_count > 0:
             result = self.result_queue.get()
             if isinstance(result, Task):
@@ -101,7 +101,7 @@ class AsyncPipeline(Pipeline):
 
     def end(self):
         end_task = ControlTask(ControlCommand.End)
-        for _ in range(self.stages[0].worker_num):
+        for _ in range(self.stages[0].num_worker):
             self.job_queue.put(end_task)
         for _ in self.wait():
             pass

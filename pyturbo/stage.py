@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Iterable, Union
+from typing import Iterable, List, Union
 
 from .resource import Resources
 from .runtime import DevModes
@@ -16,34 +16,23 @@ class Stage(object):
     '''
 
     def __init__(self, resources: Union[None, Resources] = None,
-                 max_worker: Union[None, int] = None,
                  result_queue_size: int = 32):
         self.resources = resources
-        if resources is not None:
-            self.resource_allocation = resources.allocate(
-                self.get_resource_unit())
-            self.worker_num = len(self.resource_allocation)
-            if max_worker is not None:
-                self.worker_num = min(self.worker_num, max_worker)
-                self.resource_allocation = self.resource_allocation[
-                    :self.worker_num]
-        else:
-            if max_worker is None:
-                max_worker = 1
-            self.resource_allocation = [{} for _ in range(max_worker)]
-            self.worker_num = max_worker
+        self.resource_allocation = self.allocate_resource(resources)
+        self.num_worker = len(self.resource_allocation)
         self.result_queue_size = result_queue_size
         self.logger = None
 
-    def get_resource_unit(self):
+    def allocate_resource(self, resources: Resources) -> List[Resources]:
         '''
-        Resource requirement for each worker.
+        Allocate resources to each worker, the length of return value indicates number of workers. Called during object initialization.
         '''
-        return {'cpu': 0.01}
+        return [resources]
 
     def reset(self):
         '''
-        Reset a worker process. Automatically executed during initialization.
+        Reset a worker process. 
+        Executed during initialization and at reset command.
         '''
         self.logger.debug('Reset.')
 
@@ -85,7 +74,7 @@ class Stage(object):
 
     def __repr__(self):
         return '%s(x%d)%s' % (
-            self.__class__.__name__, self.worker_num,
+            self.__class__.__name__, self.num_worker,
             '@' + str(self.resources) if self.resources is not None else '')
 
 
@@ -97,8 +86,10 @@ class ReorderStage(Stage):
     '''
 
     def __init__(self, resources: Union[None, Resources] = None,
-                 result_queue_size: int = 32, reorder_buffer_size: int = 128):
-        super(ReorderStage, self).__init__(resources, 1, result_queue_size)
+                 result_queue_size: int = 32,
+                 reorder_buffer_size: int = 128):
+        super(ReorderStage, self).__init__(resources, result_queue_size)
+        assert self.num_worker == 1, 'ReorderStage must have only 1 worker.'
         self.reorder_buffer_size = reorder_buffer_size
 
     def get_sequence_id(self, task: Task) -> int:
@@ -129,6 +120,8 @@ class ReorderStage(Stage):
                 task = self.reorder_buffer.popleft()
                 yield task
                 self.next_id = self.get_sequence_id(task) + 1
+            else:
+                break
 
     def run(self, task):
         assert isinstance(task, Task)

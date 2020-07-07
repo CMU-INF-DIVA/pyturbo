@@ -1,6 +1,6 @@
+import faulthandler
 import os
 import resource
-import faulthandler
 
 try:
     '''
@@ -11,7 +11,7 @@ try:
         resource.setrlimit(resource.RLIMIT_NOFILE, (1048576, 1048576))
     except:
         mp.set_sharing_strategy('file_system')
-except:
+except ImportError:
     import multiprocessing as mp
 
 mp = mp.get_context('spawn')

@@ -11,9 +11,6 @@ class Stage1(Stage):
     Take in two integers x and y, generate x ~ x + y
     '''
 
-    def __init__(self, resources):
-        super(Stage1, self).__init__(resources, max_worker=1)
-
     def process(self, task):
         x, y = task.content
         for i in range(y):
@@ -30,8 +27,9 @@ class Stage2(Stage):
     x -> x * 7
     '''
 
-    def __init__(self, resources):
-        super(Stage2, self).__init__(resources, max_worker=4)
+    def allocate_resource(self, resources):
+        num_worker = len(resources.get('cpu')) * 2
+        return resources.split(num_worker)
 
     def process(self, task):
         task.start(self)
@@ -48,8 +46,9 @@ class Stage3(Stage):
     x -> int(x / 7)
     '''
 
-    def __init__(self, resources):
-        super(Stage3, self).__init__(resources, max_worker=2)
+    def get_num_worker(self, resources):
+        num_worker = len(resources.get('cpu'))
+        return resources.split(num_worker)
 
     def process(self, task):
         task.start(self)
@@ -65,9 +64,6 @@ class Stage4(ReorderStage):
     '''
     x -> -x
     '''
-
-    def __init__(self, resources):
-        super(Stage4, self).__init__(resources)
 
     def get_sequence_id(self, task):
         return task.meta['i']
@@ -88,13 +84,13 @@ class ToySystem(System):
     '''
 
     def get_num_pipeline(self, resources):
-        return 4
+        return len(resources.get('cpu')) // 5
 
     def get_stages(self, resources):
-        stages = [
+        stages = [  # Fake resource allocation
             Stage1(resources.select(cpu=(0, 1), gpu=False)),
-            Stage2(resources.select(cpu=(1, 3), gpu=True)),
-            Stage3(resources.select(cpu=(0.6, 0.9))),
+            Stage2(resources.select(cpu=(1, 3))),
+            Stage3(resources.select(cpu=(0.6, 0.9), gpu=True)),
             Stage4(resources.select(cpu=(-0.2, None)))
         ]
         return stages
