@@ -32,28 +32,32 @@ class System(object):
     A system consists of multiple peer pipelines.
     '''
 
-    def __init__(self, num_pipeline: int = 1,
-                 show_progress=True,
-                 job_queue_size: int = -1,
+    def __init__(self, show_progress=True, job_queue_size: int = -1,
                  pipeline_job_queue_size: int = 32,
                  resource_scan_args={}, pipeline_build_args={}):
         self.logger = get_logger(repr(self))
-        self.num_pipeline = num_pipeline
-        self.pipeline_fn = partial(
-            AsyncPipeline, job_queue_size=pipeline_job_queue_size)
         self.debug = 'pipeline' in DevModes
+        self.resources = Resources(**resource_scan_args)
+        self.logger.info('Available resources: %s', repr(self.resources))
         if self.debug:
             self.logger.info(
                 'Debug mode: one SyncPipeline in a single process.')
             self.num_pipeline = 1
             self.pipeline_fn = SyncPipeline
+        else:
+            self.num_pipeline = self.get_num_pipeline(self.resources)
+            self.logger.info(
+                'Production mode: %d AsyncPipelines', self.num_pipeline)
+            self.pipeline_fn = partial(
+                AsyncPipeline, job_queue_size=pipeline_job_queue_size)
         self.show_progress = show_progress
         self.job_queue = Queue(job_queue_size)
-        self.resources = Resources(**resource_scan_args)
-        self.logger.info('Available resources: %s', repr(self.resources))
         self.result_queue = Queue()
         self.job_count = 0
         self.build(**pipeline_build_args)
+
+    def get_num_pipeline(self, resources: Resources) -> int:
+        return 1
 
     def get_stages(self, resources: Resources) -> List[Stage]:
         '''
@@ -76,11 +80,11 @@ class System(object):
             job = self.job_queue.get()
             if job is None:
                 return
-            if isinstance(pipeline, AsyncPipeline):
+            if not self.debug:
                 pipeline.job_queue.put(job.task)
                 pipeline.reset()
                 results_gen = pipeline.wait()
-            elif isinstance(pipeline, SyncPipeline):
+            else:
                 results_gen = pipeline.run_task(job.task)
             if self.show_progress:
                 results_gen = progressbar(

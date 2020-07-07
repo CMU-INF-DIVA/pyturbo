@@ -1,5 +1,6 @@
 import os
 import resource
+import faulthandler
 
 try:
     '''
@@ -14,4 +15,5 @@ except:
     import multiprocessing as mp
 
 mp = mp.get_context('spawn')
+faulthandler.enable()
 DevModes = set(os.environ.get('PYTURBO_DEV', '').split())

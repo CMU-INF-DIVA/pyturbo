@@ -87,6 +87,9 @@ class ToySystem(System):
     (x, y) -> [*range(-x, -x - y, -1)]
     '''
 
+    def get_num_pipeline(self, resources):
+        return 4
+
     def get_stages(self, resources):
         stages = [
             Stage1(resources.select(cpu=(0, 1), gpu=False)),
@@ -97,8 +100,8 @@ class ToySystem(System):
         return stages
 
 
-def main(num_pipeline=4, n_job=9):
-    system = ToySystem(num_pipeline)
+def main(n_job=9):
+    system = ToySystem()
     system.start()
     for _ in range(n_job):
         x = random.randint(0, 9000)

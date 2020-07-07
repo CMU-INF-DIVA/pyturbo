@@ -1,5 +1,10 @@
 # Version History
 
+## v0.2.3
+
+- Fault handler.
+- Set number of pipelines.
+
 ## v0.2.2
 
 - Debug mode control.
