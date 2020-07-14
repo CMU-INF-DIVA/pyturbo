@@ -32,7 +32,7 @@ class System(object):
     A system consists of multiple peer pipelines.
     '''
 
-    def __init__(self, show_progress=True, job_queue_size: int = -1,
+    def __init__(self, silent_job_progress=False, job_queue_size: int = -1,
                  pipeline_job_queue_size: int = 32,
                  resource_scan_args={}, pipeline_build_args={}):
         self.logger = get_logger(repr(self))
@@ -50,7 +50,9 @@ class System(object):
                 'Production mode: %d AsyncPipelines', self.num_pipeline)
             self.pipeline_fn = partial(
                 AsyncPipeline, job_queue_size=pipeline_job_queue_size)
-        self.show_progress = show_progress
+        self.silent_job_progress = silent_job_progress
+        if silent_job_progress:
+            self.logger.info('In-job progress: silented')
         self.job_queue = Queue(job_queue_size)
         self.result_queue = Queue()
         self.job_count = 0
@@ -86,11 +88,10 @@ class System(object):
                 results_gen = pipeline.wait()
             else:
                 results_gen = pipeline.run_task(job.task)
-            if self.show_progress:
-                results_gen = progressbar(
-                    results_gen,
-                    desc=' Pipeline-%d(%s)' % (pipeline_id, job.name),
-                    total=job.length, position=pipeline_id, leave=False)
+            results_gen = progressbar(
+                results_gen, desc=' Pipeline-%d(%s)' % (pipeline_id, job.name),
+                total=job.length, position=pipeline_id, leave=False,
+                silent=self.silent_job_progress)
             results = self.get_results(job, results_gen)
             if isinstance(pipeline, SyncPipeline):
                 pipeline.reset()
@@ -116,7 +117,8 @@ class System(object):
     def start(self):
         self.logger.info('Starting system')
         self.progressbar = progressbar(
-            total=self.job_count, desc='Jobs', position=self.num_pipeline)
+            total=self.job_count, desc='Jobs', position=self.num_pipeline
+            if not self.silent_job_progress else None)
         for pipeline in self.pipelines:
             pipeline.start()
         if not self.debug:

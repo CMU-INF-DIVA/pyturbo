@@ -6,7 +6,12 @@ from tqdm.autonotebook import tqdm
 
 from .runtime import DevModes
 
-progressbar = partial(tqdm, dynamic_ncols=True)
+
+def progressbar(iterable=None, desc=None, total=None, *, silent=False,
+                **kwargs):
+    if not silent:
+        return tqdm(iterable, desc, total, dynamic_ncols=True, **kwargs)
+    return iterable
 
 
 def get_logger(name, level=None, log_file=None):

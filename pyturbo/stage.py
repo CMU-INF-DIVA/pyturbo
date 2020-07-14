@@ -87,7 +87,7 @@ class ReorderStage(Stage):
 
     def __init__(self, resources: Union[None, Resources] = None,
                  result_queue_size: int = 32,
-                 reorder_buffer_size: int = 128):
+                 reorder_buffer_size: int = 32):
         super(ReorderStage, self).__init__(resources, result_queue_size)
         assert self.num_worker == 1, 'ReorderStage must have only 1 worker.'
         self.reorder_buffer_size = reorder_buffer_size

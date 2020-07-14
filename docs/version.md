@@ -1,5 +1,9 @@
 # Version History
 
+## v0.2.4
+
+- Silent progress bar.
+
 ## v0.2.3
 
 - Fault handler.
