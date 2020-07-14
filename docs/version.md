@@ -1,5 +1,9 @@
 # Version History
 
+## v0.2.5
+
+- Thread safe progress bar, and silent option.
+
 ## v0.2.4
 
 - Silent progress bar.

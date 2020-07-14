@@ -1,6 +1,6 @@
 from functools import partial
 from queue import Queue
-from threading import Thread
+from threading import Lock, Thread
 from typing import Any, Iterable, List, Union
 
 from .pipeline import AsyncPipeline, SyncPipeline
@@ -32,7 +32,7 @@ class System(object):
     A system consists of multiple peer pipelines.
     '''
 
-    def __init__(self, silent_job_progress=False, job_queue_size: int = -1,
+    def __init__(self, *, show_progress=True, job_queue_size: int = -1,
                  pipeline_job_queue_size: int = 32,
                  resource_scan_args={}, pipeline_build_args={}):
         self.logger = get_logger(repr(self))
@@ -50,12 +50,11 @@ class System(object):
                 'Production mode: %d AsyncPipelines', self.num_pipeline)
             self.pipeline_fn = partial(
                 AsyncPipeline, job_queue_size=pipeline_job_queue_size)
-        self.silent_job_progress = silent_job_progress
-        if silent_job_progress:
-            self.logger.info('In-job progress: silented')
+        self.show_progress = show_progress
         self.job_queue = Queue(job_queue_size)
         self.result_queue = Queue()
-        self.job_count = 0
+        self.job_count, self.result_count = 0, 0
+        self.thread_lock = Lock()
         self.build(**pipeline_build_args)
 
     def get_num_pipeline(self, resources: Resources) -> int:
@@ -82,6 +81,9 @@ class System(object):
             job = self.job_queue.get()
             if job is None:
                 return
+            if not self.show_progress:
+                self.logger.info(
+                    'Pipeline %d: processing job: %s', pipeline_id, job.name)
             if not self.debug:
                 pipeline.job_queue.put(job.task)
                 pipeline.reset()
@@ -91,13 +93,21 @@ class System(object):
             results_gen = progressbar(
                 results_gen, desc=' Pipeline-%d(%s)' % (pipeline_id, job.name),
                 total=job.length, position=pipeline_id, leave=False,
-                silent=self.silent_job_progress)
+                silent=not self.show_progress)
             results = self.get_results(job, results_gen)
             if isinstance(pipeline, SyncPipeline):
                 pipeline.reset()
             job.finish(results)
             self.result_queue.put(job)
-            self.progressbar.update()
+            with self.thread_lock:
+                self.result_count += 1
+                if self.show_progress:
+                    self.progressbar.update()
+            if not self.show_progress:
+                self.logger.info(
+                    'Pipeline %d: processed job: %s', pipeline_id, job.name)
+                self.logger.info('Jobs processed / total: %d / %d' % (
+                    self.result_count, self.job_count))
 
     def build(self, **pipeline_args):
         self.pipelines = []
@@ -116,9 +126,9 @@ class System(object):
 
     def start(self):
         self.logger.info('Starting system')
-        self.progressbar = progressbar(
-            total=self.job_count, desc='Jobs', position=self.num_pipeline
-            if not self.silent_job_progress else None)
+        if self.show_progress:
+            self.progressbar = progressbar(
+                total=self.job_count, desc='Jobs', position=self.num_pipeline)
         for pipeline in self.pipelines:
             pipeline.start()
         if not self.debug:
@@ -128,8 +138,9 @@ class System(object):
     def add_job(self, job: Job):
         self.job_queue.put(job)
         self.job_count += 1
-        self.progressbar.total = self.job_count
-        self.progressbar.refresh()
+        if self.show_progress:
+            self.progressbar.total = self.job_count
+            self.progressbar.refresh()
         if self.debug:
             self.job_queue.put(None)
             self.monit_pipeline(0)
@@ -145,7 +156,8 @@ class System(object):
         if not self.debug:
             for thread in self.monitor_threads:
                 thread.join()
-        self.progressbar.close()
+        if self.show_progress:
+            self.progressbar.close()
 
     def terminate(self):
         self.logger.info('Terminating system')
@@ -154,7 +166,8 @@ class System(object):
         if not self.debug:
             for thread in self.monitor_threads:
                 thread.terminate()
-        self.progressbar.close()
+        if self.show_progress:
+            self.progressbar.close()
 
     def __repr__(self):
         return self.__class__.__name__
