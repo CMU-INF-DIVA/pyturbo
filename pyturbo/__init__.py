@@ -1,6 +1,6 @@
 __author__ = 'Lijun Yu'
 
-from .runtime import DevModes
+from .runtime import Options
 from .stage import ReorderStage, Stage
 from .system import Job, System
 from .task import Task

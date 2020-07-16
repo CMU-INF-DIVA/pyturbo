@@ -68,15 +68,16 @@ def main():
     system.end() # End system
 ```
 
+## Options
+
+
+See [options.md](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/options.md)
+
 ## Demo
 
 ![abstract.png](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/demo.gif)
 
 See [demo.py](demo.py) for an example implementation.
-
-## Development Modes
-
-See [develop.md](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/develop.md)
 
 ## Version History
 
