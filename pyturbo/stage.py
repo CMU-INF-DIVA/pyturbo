@@ -141,5 +141,5 @@ class ReorderStage(Stage):
                 self.logger.warn('Stopped before complete: %s', task)
             except Exception as e:
                 self.logger.exception('Failed: %s', task)
-                if 'exception' in DevModes:
+                if Options.raise_exception:
                     raise e

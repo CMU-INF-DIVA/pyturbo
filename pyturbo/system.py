@@ -173,6 +173,6 @@ class System(object):
             self.progressbar.close()
 
     def __repr__(self):
-        return '%s.%s(%s)' % (
-            __name__, self.__class__.__name__,
+        return '%s(%s)' % (
+            self.__class__.__name__,
             'debug' if self.debug_mode else 'x%d' % (self.num_pipeline))

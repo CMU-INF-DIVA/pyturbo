@@ -1,5 +1,9 @@
 # Version History
 
+## v0.2.7
+
+- Fix option.
+
 ## v0.2.6
 
 - Option management.
