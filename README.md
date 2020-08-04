@@ -70,8 +70,7 @@ def main():
 
 ## Options
 
-
-See [options.md](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/options.md)
+See [options.md](https://github.com/CMU-INF-DIVA/pyturbo/blob/master/docs/options.md)
 
 ## Demo
 
@@ -81,4 +80,4 @@ See [demo.py](demo.py) for an example implementation.
 
 ## Version History
 
-See [version.md](https://github.com/CMU-INF-DIVA/pyturbo/raw/master/docs/version.md).
+See [version.md](https://github.com/CMU-INF-DIVA/pyturbo/blob/master/docs/version.md).
