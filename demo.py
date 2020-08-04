@@ -27,9 +27,8 @@ class Stage2(Stage):
     x -> x * 7
     '''
 
-    def allocate_resource(self, resources):
-        num_worker = len(resources.get('cpu')) * 2
-        return resources.split(num_worker)
+    def allocate_resource(self, resources, *, worker_per_cpu=1):
+        return resources.split(len(resources.get('cpu'))) * worker_per_cpu
 
     def process(self, task):
         task.start(self)
@@ -46,9 +45,8 @@ class Stage3(Stage):
     x -> int(x / 7)
     '''
 
-    def get_num_worker(self, resources):
-        num_worker = len(resources.get('cpu'))
-        return resources.split(num_worker)
+    def allocate_resource(self, resources, *, worker_per_cpu=4):
+        return resources.split(len(resources.get('cpu'))) * worker_per_cpu
 
     def process(self, task):
         task.start(self)

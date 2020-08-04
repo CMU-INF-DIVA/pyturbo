@@ -16,17 +16,23 @@ class Stage(object):
     '''
 
     def __init__(self, resources: Union[None, Resources] = None,
-                 result_queue_size: int = 32):
+                 result_queue_size: int = 32, **custom_args):
         self.resources = resources
-        self.resource_allocation = self.allocate_resource(resources)
+        self.logger = get_logger(repr(self))
+        self.resource_allocation = self.allocate_resource(
+            resources, **custom_args)
         self.num_worker = len(self.resource_allocation)
         self.result_queue_size = result_queue_size
-        self.logger = None
 
-    def allocate_resource(self, resources: Resources) -> List[Resources]:
+    def allocate_resource(self, resources: Resources,
+                          **custom_args) -> List[Resources]:
         '''
-        Allocate resources to each worker, the length of return value indicates number of workers. Called during object initialization.
+        Allocate resources to each worker, the length of return value indicates 
+        number of workers. Called during object initialization with the custom 
+        keyword arguments.
         '''
+        if len(custom_args) > 0:
+            self.logger.warn('Unprocessed custom_args: %s', custom_args)
         return [resources]
 
     def reset(self):
@@ -73,8 +79,9 @@ class Stage(object):
                 raise e
 
     def __repr__(self):
-        return '%s(x%d)%s' % (
-            self.__class__.__name__, self.num_worker,
+        return '%s%s%s' % (
+            self.__class__.__name__,
+            '(x%d)' % (self.num_worker) if hasattr(self, 'num_worker') else '',
             '@' + str(self.resources) if self.resources is not None else '')
 
 
@@ -87,8 +94,9 @@ class ReorderStage(Stage):
 
     def __init__(self, resources: Union[None, Resources] = None,
                  result_queue_size: int = 32,
-                 reorder_buffer_size: int = 32):
-        super(ReorderStage, self).__init__(resources, result_queue_size)
+                 reorder_buffer_size: int = 32, **custom_args):
+        super(ReorderStage, self).__init__(
+            resources, result_queue_size, **custom_args)
         assert self.num_worker == 1, 'ReorderStage must have only 1 worker.'
         self.reorder_buffer_size = reorder_buffer_size
 

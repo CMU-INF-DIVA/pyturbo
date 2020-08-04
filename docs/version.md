@@ -1,5 +1,9 @@
 # Version History
 
+## v0.2.8
+
+- Custom arguments for stages.
+
 ## v0.2.7
 
 - Fix option.
