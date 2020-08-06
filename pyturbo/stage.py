@@ -139,7 +139,9 @@ class ReorderStage(Stage):
             try:
                 self.logger.debug('Processing: %s', task)
                 result = self.process(task)
-                if isinstance(result, Task):
+                if result is None:
+                    continue
+                elif isinstance(result, Task):
                     yield result
                 else:
                     for res in result:

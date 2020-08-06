@@ -1,5 +1,10 @@
 # Version History
 
+## v0.2.9
+
+- Fix pipeline wait with multiple workers in the last stage.
+- Ignore none return from process function.
+
 ## v0.2.8
 
 - Custom arguments for stages.

@@ -91,13 +91,12 @@ class AsyncPipeline(Pipeline):
             self.job_queue.put(reset_task)
 
     def wait(self):
-        control_task_count = self.stages[-1].num_worker
-        while control_task_count > 0:
+        while True:
             result = self.result_queue.get()
-            if isinstance(result, Task):
-                yield result
+            if isinstance(result, ControlTask):
+                break
             else:
-                control_task_count -= 1
+                yield result
 
     def end(self):
         end_task = ControlTask(ControlCommand.End)

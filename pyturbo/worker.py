@@ -80,7 +80,9 @@ class Worker(mp.Process):
                     return
                 continue
             result = self.stage.run(task)
-            if isinstance(result, Task):
+            if result is None:
+                continue
+            elif isinstance(result, Task):
                 self.result_queue.put(result)
             else:
                 for r in result:
