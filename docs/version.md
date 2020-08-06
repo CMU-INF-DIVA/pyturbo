@@ -1,5 +1,9 @@
 # Version History
 
+## v0.2.10
+
+- Custom arguments for system.
+
 ## v0.2.9
 
 - Fix pipeline wait with multiple workers in the last stage.

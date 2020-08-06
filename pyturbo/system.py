@@ -34,14 +34,15 @@ class System(object):
 
     def __init__(self, *, job_queue_size: int = -1,
                  pipeline_job_queue_size: int = 32,
-                 resource_scan_args={}, pipeline_build_args={}):
+                 resource_scan_args={}, pipeline_build_args={}, **custom_args):
         self.debug_mode = Options.single_sync_pipeline
         self.resources = Resources(**resource_scan_args)
+        self.num_pipeline = self.get_num_pipeline(
+            self.resources, **custom_args)
         if self.debug_mode:
             self.num_pipeline = 1
             self.pipeline_fn = SyncPipeline
         else:
-            self.num_pipeline = self.get_num_pipeline(self.resources)
             self.pipeline_fn = partial(
                 AsyncPipeline, job_queue_size=pipeline_job_queue_size)
         self.logger = get_logger(repr(self))
