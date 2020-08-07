@@ -14,7 +14,7 @@
 - Environment variable `PYTURBO_OPTIONS`. For example,
 
 ```sh
-PYTURBO_DEV="raise_exception single_sync_pipeline" python xxx.py
+PYTURBO_OPTIONS="raise_exception single_sync_pipeline" python xxx.py
 ```
 
 - `pyturbo.Options`. For example,
