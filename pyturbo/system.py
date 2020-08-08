@@ -145,8 +145,8 @@ class System(object):
         if not self.debug_mode:
             for thread in self.monitor_threads:
                 thread.start()
-        for pipeline in self.pipelines:
-            [*pipeline.wait()]
+            for pipeline in self.pipelines:
+                [*pipeline.wait()]
         self.logger.info('Started')
         if not Options.no_progress_bar:
             self.progressbar = progressbar(
@@ -178,7 +178,7 @@ class System(object):
         self.logger.info('Ended')
 
     def terminate(self):
-        self.logger.exception('Terminating')
+        self.logger.info('Terminating')
         for pipeline in self.pipelines:
             pipeline.terminate()
         if not self.debug_mode:

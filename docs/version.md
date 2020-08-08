@@ -1,5 +1,9 @@
 # Version History
 
+## v0.3.2
+
+- System termination.
+
 ## v0.3.1
 
 - Parallel initialization for multiple pipelines.

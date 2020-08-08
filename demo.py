@@ -104,11 +104,14 @@ def main(n_job=9):
         name = '%d_%d' % (x, y)
         job = Job(name, task, y)
         system.add_job(job)
-    for _ in range(9):
-        job = system.result_queue.get()
-        x, y = job.task.content
-        assert job.results == [*range(-x, -x - y, -1)]
-    system.end()
+    try:
+        for _ in range(9):
+            job = system.result_queue.get()
+            x, y = job.task.content
+            assert job.results == [*range(-x, -x - y, -1)]
+        system.end()
+    except:
+        system.terminate()
 
 
 if __name__ == "__main__":
