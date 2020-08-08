@@ -1,3 +1,4 @@
+from retrying import retry
 from typing import Union
 
 from .runtime import mp
@@ -46,6 +47,8 @@ class Worker(mp.Process):
     One worker process.
     '''
 
+    QUEUE_EXCEPTIONS = (EOFError, FileNotFoundError, BrokenPipeError)
+
     def __init__(self, stage: Stage, worker_id: int,
                  job_queue: mp.Queue, result_queue: mp.Queue,
                  control_barrier: mp.Barrier, next_num_worker: int):
@@ -68,22 +71,33 @@ class Worker(mp.Process):
         if task.command == ControlCommand.End:
             return True
 
+    # In case Pytorch exhausts system's shared memory
+    @retry(retry_on_exception=lambda e: isinstance(e, RuntimeError),
+           wait_random_min=100, wait_random_max=2000)
+    def put_queue(self, content):
+        self.result_queue.put(content)
+
     def run(self):
         self.stage.init(self.worker_id)
         while True:
             try:
-                task = self.job_queue.get()
-            except (EOFError, FileNotFoundError, BrokenPipeError):
-                break
-            if isinstance(task, ControlTask):
-                if self.control(task):
-                    return
-                continue
-            result = self.stage.run(task)
-            if result is None:
-                continue
-            elif isinstance(result, Task):
-                self.result_queue.put(result)
-            else:
+                try:
+                    task = self.job_queue.get()
+                except self.QUEUE_EXCEPTIONS:
+                    break
+                if isinstance(task, ControlTask):
+                    if self.control(task):
+                        return
+                    continue
+                result = self.stage.run(task)
+                if result is None:
+                    continue
+                if isinstance(result, Task):
+                    result = [result]
                 for r in result:
-                    self.result_queue.put(r)
+                    try:
+                        self.put_queue(r)
+                    except self.QUEUE_EXCEPTIONS:
+                        break
+            except (KeyboardInterrupt, GeneratorExit):
+                break

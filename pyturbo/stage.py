@@ -56,8 +56,6 @@ class Stage(object):
                              '@' + str(self.current_resource)
                              if self.current_resource is not None else '')
         self.logger = get_logger(name)
-        self.logger.debug('Init.')
-        self.reset()
 
     def run(self, task):
         assert isinstance(task, Task), '%s is not a subclass of %s' % (
@@ -71,8 +69,6 @@ class Stage(object):
                 for res in result:
                     yield res
             self.logger.debug('Processed: %s', task)
-        except GeneratorExit:
-            self.logger.warn('Stopped before complete: %s', task)
         except Exception as e:
             self.logger.exception('Failed: %s', task)
             if Options.raise_exception:
@@ -147,8 +143,6 @@ class ReorderStage(Stage):
                     for res in result:
                         yield res
                 self.logger.debug('Processed: %s', task)
-            except GeneratorExit:
-                self.logger.warn('Stopped before complete: %s', task)
             except Exception as e:
                 self.logger.exception('Failed: %s', task)
                 if Options.raise_exception:

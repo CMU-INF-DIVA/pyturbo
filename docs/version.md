@@ -1,5 +1,11 @@
 # Version History
 
+## v0.3.0
+
+- Retry if Pytorch exhausts system's shared memory.
+- Wait for AsyncPipeline initialization.
+- Better handling at KeyboardInterrupt.
+
 ## v0.2.10
 
 - Custom arguments for system.

@@ -25,6 +25,10 @@ class Job(object):
     def finish(self, results):
         self.results = results
 
+    def __repr__(self):
+        return '%s(%s, len=%d)' % (
+            self.__class__.__name__, self.name, self.length)
+
 
 class System(object):
 
@@ -80,48 +84,54 @@ class System(object):
 
     def monit_pipeline(self, pipeline_id: int):
         pipeline = self.pipelines[pipeline_id]
+        job = None
         while True:
-            job = self.job_queue.get()
-            if job is None:
-                return
-            if Options.no_progress_bar:
-                self.logger.info(
-                    ' Pipeline %d: processing job: %s', pipeline_id, job.name)
-            if not self.debug_mode:
-                pipeline.job_queue.put(job.task)
-                pipeline.reset()
-                results_gen = pipeline.wait()
-            else:
-                results_gen = pipeline.run_task(job.task)
-            results_gen = progressbar(
-                results_gen, desc=' Pipeline %d (%s)' % (
-                    pipeline_id, job.name),
-                total=job.length, position=pipeline_id, leave=False,
-                silent=Options.no_progress_bar)
-            results = self.get_results(job, results_gen)
-            if isinstance(pipeline, SyncPipeline):
-                pipeline.reset()
-            job.finish(results)
-            self.result_queue.put(job)
-            with self.thread_lock:
-                self.result_count += 1
-                if not Options.no_progress_bar:
-                    self.progressbar.update()
-            if Options.no_progress_bar:
-                self.logger.info(
-                    ' Pipeline %d: processed job: %s', pipeline_id, job.name)
-                self.logger.info('Jobs processed / total: %d / %d' % (
-                    self.result_count, self.job_count))
+            try:
+                job = self.job_queue.get()
+                if job is None:
+                    return
+                if Options.no_progress_bar:
+                    self.logger.info(' Pipeline %d: processing job: %s',
+                                     pipeline_id, job.name)
+                if not self.debug_mode:
+                    pipeline.job_queue.put(job.task)
+                    pipeline.reset()
+                    results_gen = pipeline.wait()
+                else:
+                    results_gen = pipeline.run_task(job.task)
+                results_gen = progressbar(
+                    results_gen, desc=' Pipeline %d (%s)' % (
+                        pipeline_id, job.name),
+                    total=job.length, position=pipeline_id, leave=False,
+                    silent=Options.no_progress_bar)
+                results = self.get_results(job, results_gen)
+                if isinstance(pipeline, SyncPipeline):
+                    pipeline.reset()
+                job.finish(results)
+                self.result_queue.put(job)
+                with self.thread_lock:
+                    self.result_count += 1
+                    if not Options.no_progress_bar:
+                        self.progressbar.update()
+                if Options.no_progress_bar:
+                    self.logger.info(' Pipeline %d: processed job: %s',
+                                     pipeline_id, job.name)
+                    self.logger.info('Jobs processed / total: %d / %d' % (
+                        self.result_count, self.job_count))
+            except:
+                self.logger.warn(' Pipeline %d: exiting abnormally on %s',
+                                 pipeline_id, job)
+                break
 
     def build(self, **pipeline_args):
         self.pipelines = []
         for pipeline_i, resources in enumerate(
                 self.resources.split(self.num_pipeline)):
             stages = self.get_stages(resources)
-            pipeline = self.pipeline_fn(stages, **pipeline_args)
-            self.pipelines.append(pipeline)
             self.logger.info('Building pipeline %d: \n\t%s', pipeline_i,
                              '\n\t'.join([repr(s) for s in stages]))
+            pipeline = self.pipeline_fn(stages, **pipeline_args)
+            self.pipelines.append(pipeline)
         if not self.debug_mode:
             self.monitor_threads = [
                 Thread(target=self.monit_pipeline, args=(i,))
@@ -129,15 +139,16 @@ class System(object):
         self.progressbar = None
 
     def start(self):
-        self.logger.info('Starting system')
-        if not Options.no_progress_bar:
-            self.progressbar = progressbar(
-                total=self.job_count, desc='Jobs', position=self.num_pipeline)
+        self.logger.info('Starting')
         for pipeline in self.pipelines:
             pipeline.start()
         if not self.debug_mode:
             for thread in self.monitor_threads:
                 thread.start()
+        self.logger.info('Started')
+        if not Options.no_progress_bar:
+            self.progressbar = progressbar(
+                total=self.job_count, desc='Jobs', position=self.num_pipeline)
 
     def add_job(self, job: Job):
         self.job_queue.put(job)
@@ -150,28 +161,32 @@ class System(object):
             self.monit_pipeline(0)
 
     def end(self):
-        self.logger.info('Ending system')
+        self.logger.info('Ending')
         for pipeline in self.pipelines:
             pipeline.end()
         for pipeline in self.pipelines:
             pipeline.join()
-        for _ in range(self.num_pipeline):
-            self.job_queue.put(None)
         if not self.debug_mode:
+            for _ in range(self.num_pipeline):
+                self.job_queue.put(None)
             for thread in self.monitor_threads:
                 thread.join()
         if not Options.no_progress_bar:
             self.progressbar.close()
+        self.logger.info('Ended')
 
     def terminate(self):
-        self.logger.info('Terminating system')
+        self.logger.exception('Terminating')
         for pipeline in self.pipelines:
             pipeline.terminate()
         if not self.debug_mode:
+            for _ in range(self.num_pipeline):
+                self.job_queue.put(None)
             for thread in self.monitor_threads:
-                thread.terminate()
+                thread.join()
         if not Options.no_progress_bar:
             self.progressbar.close()
+        self.logger.info('Terminated')
 
     def __repr__(self):
         return '%s(%s)' % (

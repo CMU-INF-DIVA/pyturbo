@@ -30,6 +30,7 @@ class SyncPipeline(Pipeline):
     def start(self):
         for stage in self.stages:
             stage.init()
+        self.reset()
 
     def run_task(self, task, current_stage=0):
         if current_stage == len(self.stages):
@@ -84,6 +85,9 @@ class AsyncPipeline(Pipeline):
     def start(self):
         for group in self.worker_groups:
             group.start()
+        self.reset()
+        for _ in self.wait():
+            pass
 
     def reset(self):
         reset_task = ControlTask(ControlCommand.Reset)
