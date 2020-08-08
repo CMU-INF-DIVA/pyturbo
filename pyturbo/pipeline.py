@@ -86,8 +86,6 @@ class AsyncPipeline(Pipeline):
         for group in self.worker_groups:
             group.start()
         self.reset()
-        for _ in self.wait():
-            pass
 
     def reset(self):
         reset_task = ControlTask(ControlCommand.Reset)

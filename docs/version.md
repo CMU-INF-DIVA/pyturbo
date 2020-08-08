@@ -1,5 +1,9 @@
 # Version History
 
+## v0.3.1
+
+- Parallel initialization for multiple pipelines.
+
 ## v0.3.0
 
 - Retry if Pytorch exhausts system's shared memory.

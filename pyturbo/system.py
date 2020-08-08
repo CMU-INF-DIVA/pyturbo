@@ -145,6 +145,8 @@ class System(object):
         if not self.debug_mode:
             for thread in self.monitor_threads:
                 thread.start()
+        for pipeline in self.pipelines:
+            [*pipeline.wait()]
         self.logger.info('Started')
         if not Options.no_progress_bar:
             self.progressbar = progressbar(
@@ -186,7 +188,7 @@ class System(object):
                 thread.join()
         if not Options.no_progress_bar:
             self.progressbar.close()
-        self.logger.info('Terminated')
+        self.logger.exception('Terminated')
 
     def __repr__(self):
         return '%s(%s)' % (
