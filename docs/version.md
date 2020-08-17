@@ -1,5 +1,10 @@
 # Version History
 
+## v0.3.5
+
+- Bypass through reorder stage.
+- Robust task fail.
+
 ## v0.3.4
 
 - Unified queue exceptions.

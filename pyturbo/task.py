@@ -3,7 +3,11 @@ from collections import namedtuple
 from enum import IntEnum, auto
 from typing import Any, Union
 
+from .utils import get_logger
+
 ControlCommand = IntEnum('ControlCommand', ['End', 'Reset'])
+
+logger = get_logger(__name__)
 
 
 class ControlTask(object):
@@ -19,7 +23,7 @@ class ControlTask(object):
 
 
 TaskLog = namedtuple('TaskLog', [
-    'stage', 'duration', 'start_time', 'end_time'])
+    'stage', 'duration', 'start_time', 'end_time', 'success'])
 
 
 class Task(object):
@@ -47,18 +51,22 @@ class Task(object):
         self.current_stage = str(stage)
         return self
 
-    def finish(self, content: Any = None):
+    def finish(self, content: Any = None, success: bool = True):
         self.finish_time = time.time()
         if content is not None:
             self.content = content
         duration = self.finish_time - self.start_time
         log = TaskLog(
-            self.current_stage, duration, self.start_time, self.finish_time)
+            self.current_stage, duration, self.start_time, self.finish_time,
+            success)
         self.logs.append(log)
         return self
 
     def fail(self):
-        self.finish()
+        try:
+            self.finish(False)
+        except:
+            logger.exception('Exception ignored for failed task: %s', self)
         self.success = False
 
     def __repr__(self):

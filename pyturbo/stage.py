@@ -115,11 +115,14 @@ class ReorderStage(Stage):
         self.next_id = 0
 
     def push(self, task: Task):
-        offset = self.get_sequence_id(task) - self.next_id
-        if offset >= len(self.reorder_buffer):
-            self.reorder_buffer.extend([None] * (
-                offset - len(self.reorder_buffer) + 1))
-        self.reorder_buffer[offset] = task
+        try:
+            offset = self.get_sequence_id(task) - self.next_id
+            if offset >= len(self.reorder_buffer):
+                self.reorder_buffer.extend([None] * (
+                    offset - len(self.reorder_buffer) + 1))
+            self.reorder_buffer[offset] = task
+        except:
+            self.reorder_buffer.insert(0, task)
         if len(self.reorder_buffer) > self.reorder_buffer_size:
             self.logger.warn(
                 'Reorder buffer size %d exceeds limit of %d',
@@ -130,7 +133,10 @@ class ReorderStage(Stage):
             if self.reorder_buffer[0] is not None:
                 task = self.reorder_buffer.popleft()
                 yield task
-                self.next_id = self.get_sequence_id(task) + 1
+                try:
+                    self.next_id = self.get_sequence_id(task) + 1
+                except:
+                    pass
             else:
                 break
 

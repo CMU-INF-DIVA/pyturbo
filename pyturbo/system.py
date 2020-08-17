@@ -21,6 +21,7 @@ class Job(object):
         self.name = name
         self.task = task
         self.length = length
+        self.results = None
 
     def finish(self, results):
         self.results = results
