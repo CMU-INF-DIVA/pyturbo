@@ -17,6 +17,9 @@ except ImportError:
 mp = mp.get_context('spawn')
 faulthandler.enable()
 
+QUEUE_EXCEPTIONS = (BrokenPipeError, ConnectionResetError, EOFError,
+                    FileNotFoundError)
+
 
 class Options(object):
 

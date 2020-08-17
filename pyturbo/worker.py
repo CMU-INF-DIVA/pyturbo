@@ -1,7 +1,8 @@
-from retrying import retry
 from typing import Union
 
-from .runtime import mp
+from retrying import retry
+
+from .runtime import QUEUE_EXCEPTIONS, mp
 from .stage import Stage
 from .task import ControlCommand, ControlTask, Task
 
@@ -51,8 +52,6 @@ class Worker(mp.Process):
     One worker process.
     '''
 
-    QUEUE_EXCEPTIONS = (EOFError, FileNotFoundError, BrokenPipeError)
-
     def __init__(self, stage: Stage, worker_id: int,
                  job_queue: mp.Queue, result_queue: mp.Queue,
                  control_barrier: mp.Barrier, next_num_worker: int):
@@ -87,7 +86,7 @@ class Worker(mp.Process):
             try:
                 try:
                     task = self.job_queue.get()
-                except self.QUEUE_EXCEPTIONS:
+                except QUEUE_EXCEPTIONS:
                     break
                 if isinstance(task, ControlTask):
                     if self.control(task):
@@ -101,7 +100,7 @@ class Worker(mp.Process):
                 for r in result:
                     try:
                         self.put_queue(r)
-                    except self.QUEUE_EXCEPTIONS:
+                    except QUEUE_EXCEPTIONS:
                         break
             except (KeyboardInterrupt, GeneratorExit):
                 break

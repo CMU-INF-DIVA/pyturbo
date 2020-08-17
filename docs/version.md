@@ -1,9 +1,13 @@
 # Version History
 
+## v0.3.4
+
+- Unified queue exceptions.
+
 ## v0.3.3
 
 - Bypass failed tasks.
-- Avoid hang at termination.
+- Avoid hanging at termination.
 
 ## v0.3.2
 

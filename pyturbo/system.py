@@ -5,7 +5,7 @@ from typing import Any, Iterable, List, Union
 
 from .pipeline import AsyncPipeline, SyncPipeline
 from .resource import Resources
-from .runtime import Options
+from .runtime import QUEUE_EXCEPTIONS, Options
 from .stage import Stage
 from .task import Task
 from .utils import get_logger, progressbar
@@ -118,7 +118,7 @@ class System(object):
                                      pipeline_id, job.name)
                     self.logger.info('Jobs processed / total: %d / %d' % (
                         self.result_count, self.job_count))
-        except (EOFError, FileNotFoundError, BrokenPipeError):
+        except QUEUE_EXCEPTIONS:
             return
         except:
             self.logger.exception(

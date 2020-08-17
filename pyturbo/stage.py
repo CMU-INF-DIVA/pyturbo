@@ -62,7 +62,7 @@ class Stage(object):
             type(task), Task)
         try:
             if not task.success:
-                self.logger.warn('Bypassing failed: %s', task)
+                self.logger.warn('Bypassing: %s', task)
                 yield task
                 return
             self.logger.debug('Processing: %s', task)
@@ -141,7 +141,7 @@ class ReorderStage(Stage):
         for task in self.iter_pop():
             try:
                 if not task.success:
-                    self.logger.warn('Bypassing failed: %s', task)
+                    self.logger.warn('Bypassing: %s', task)
                     yield task
                     continue
                 self.logger.debug('Processing: %s', task)
