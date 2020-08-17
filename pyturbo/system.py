@@ -85,8 +85,8 @@ class System(object):
     def monit_pipeline(self, pipeline_id: int):
         pipeline = self.pipelines[pipeline_id]
         job = None
-        while True:
-            try:
+        try:
+            while True:
                 job = self.job_queue.get()
                 if job is None:
                     return
@@ -118,10 +118,13 @@ class System(object):
                                      pipeline_id, job.name)
                     self.logger.info('Jobs processed / total: %d / %d' % (
                         self.result_count, self.job_count))
-            except:
-                self.logger.warn(' Pipeline %d: exiting abnormally on %s',
-                                 pipeline_id, job)
-                break
+        except (EOFError, FileNotFoundError, BrokenPipeError):
+            return
+        except:
+            self.logger.exception(
+                ' Pipeline %d: terminating due to error on %s',
+                pipeline_id, job)
+            pipeline.terminate()
 
     def build(self, **pipeline_args):
         self.pipelines = []
@@ -134,7 +137,7 @@ class System(object):
             self.pipelines.append(pipeline)
         if not self.debug_mode:
             self.monitor_threads = [
-                Thread(target=self.monit_pipeline, args=(i,))
+                Thread(target=self.monit_pipeline, args=(i,), daemon=True)
                 for i in range(self.num_pipeline)]
         self.progressbar = None
 
@@ -162,33 +165,33 @@ class System(object):
             self.job_queue.put(None)
             self.monit_pipeline(0)
 
-    def end(self):
+    def end(self, timeout=1):
         self.logger.info('Ending')
         for pipeline in self.pipelines:
             pipeline.end()
         for pipeline in self.pipelines:
-            pipeline.join()
+            pipeline.join(timeout)
         if not self.debug_mode:
             for _ in range(self.num_pipeline):
                 self.job_queue.put(None)
             for thread in self.monitor_threads:
-                thread.join()
+                thread.join(timeout)
         if not Options.no_progress_bar:
             self.progressbar.close()
         self.logger.info('Ended')
 
-    def terminate(self):
-        self.logger.info('Terminating')
+    def terminate(self, timeout=1):
+        self.logger.exception('Terminating')
         for pipeline in self.pipelines:
             pipeline.terminate()
         if not self.debug_mode:
             for _ in range(self.num_pipeline):
                 self.job_queue.put(None)
             for thread in self.monitor_threads:
-                thread.join()
+                thread.join(timeout)
         if not Options.no_progress_bar:
             self.progressbar.close()
-        self.logger.exception('Terminated')
+        self.logger.error('Terminated')
 
     def __repr__(self):
         return '%s(%s)' % (

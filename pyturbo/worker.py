@@ -35,10 +35,14 @@ class WorkerGroup(object):
     def join(self, timeout=1):
         for process in self.processes:
             process.join(timeout)
+        for process in self.processes:
+            if process.exitcode is not None:
+                process.close()
 
-    def terminate(self):
+    def terminate(self, timeout=1):
         for process in self.processes:
             process.terminate()
+        self.join(timeout)
 
 
 class Worker(mp.Process):

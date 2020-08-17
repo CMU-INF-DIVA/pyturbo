@@ -33,6 +33,7 @@ class Task(object):
         self.content = content
         self._build_meta(meta, parent_task)
         self.logs = parent_task.logs.copy() if parent_task is not None else []
+        self.success = True
 
     def _build_meta(self, meta, parent_task):
         self.meta = {}
@@ -55,6 +56,10 @@ class Task(object):
             self.current_stage, duration, self.start_time, self.finish_time)
         self.logs.append(log)
         return self
+
+    def fail(self):
+        self.finish()
+        self.success = False
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, repr(self.meta))

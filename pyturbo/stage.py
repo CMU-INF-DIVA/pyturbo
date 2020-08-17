@@ -61,6 +61,10 @@ class Stage(object):
         assert isinstance(task, Task), '%s is not a subclass of %s' % (
             type(task), Task)
         try:
+            if not task.success:
+                self.logger.warn('Bypassing failed: %s', task)
+                yield task
+                return
             self.logger.debug('Processing: %s', task)
             result = self.process(task)
             if isinstance(result, Task):
@@ -70,9 +74,12 @@ class Stage(object):
                     yield res
             self.logger.debug('Processed: %s', task)
         except Exception as e:
+            task.fail()
             self.logger.exception('Failed: %s', task)
             if Options.raise_exception:
                 raise e
+            else:
+                yield task
 
     def __repr__(self):
         return '%s%s%s' % (
@@ -133,6 +140,10 @@ class ReorderStage(Stage):
         self.push(task)
         for task in self.iter_pop():
             try:
+                if not task.success:
+                    self.logger.warn('Bypassing failed: %s', task)
+                    yield task
+                    continue
                 self.logger.debug('Processing: %s', task)
                 result = self.process(task)
                 if result is None:
@@ -144,6 +155,9 @@ class ReorderStage(Stage):
                         yield res
                 self.logger.debug('Processed: %s', task)
             except Exception as e:
+                task.fail()
                 self.logger.exception('Failed: %s', task)
                 if Options.raise_exception:
                     raise e
+                else:
+                    yield task

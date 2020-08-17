@@ -1,5 +1,10 @@
 # Version History
 
+## v0.3.3
+
+- Bypass failed tasks.
+- Avoid hang at termination.
+
 ## v0.3.2
 
 - System termination.
