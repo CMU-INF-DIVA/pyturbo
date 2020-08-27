@@ -1,5 +1,9 @@
 # Version History
 
+## v0.3.6
+
+- Pass exceptions through pipeline monitor.
+
 ## v0.3.5
 
 - Bypass through reorder stage.

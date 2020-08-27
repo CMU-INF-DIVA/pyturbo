@@ -11,8 +11,7 @@ class Stage(object):
 
     '''
     One stage in a pipeline. A stage can have multiple peer worker processes.
-    Worker number is desided based on available resources.
-    If no resource is provided for allocation, defaults to max_worker or 1.
+    Worker number is desided based on how available resources are allocated.
     '''
 
     def __init__(self, resources: Union[None, Resources] = None,

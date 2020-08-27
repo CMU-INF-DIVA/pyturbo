@@ -121,11 +121,13 @@ class System(object):
                         self.result_count, self.job_count))
         except QUEUE_EXCEPTIONS:
             return
-        except:
+        except Exception as e:
             self.logger.exception(
                 ' Pipeline %d: terminating due to error on %s',
                 pipeline_id, job)
             pipeline.terminate()
+            if Options.raise_exception:
+                raise e
 
     def build(self, **pipeline_args):
         self.pipelines = []
