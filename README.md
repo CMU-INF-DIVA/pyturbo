@@ -1,6 +1,7 @@
 # Pyturbo Package
 
 [![PyPI version](https://badge.fury.io/py/py-turbo.svg)](https://badge.fury.io/py/py-turbo)
+[![Downloads](https://pepy.tech/badge/py-turbo)](https://pepy.tech/project/py-turbo)
 ![Publish to PyPI](https://github.com/CMU-INF-DIVA/pyturbo/workflows/Publish%20to%20PyPI/badge.svg)
 
 Author: Lijun Yu
