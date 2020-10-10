@@ -32,6 +32,7 @@ class Options(object):
         for option in os.environ.get('PYTURBO_OPTIONS', '').split():
             if option.startswith('log_file='):
                 self.log_file = option.split('=')[1]
+                continue
             if not hasattr(self, option):
                 print('Warning: option %s unrecognized.' % (option))
                 continue

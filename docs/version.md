@@ -1,5 +1,9 @@
 # Version History
 
+## v0.3.8
+
+- Fix log file option env.
+
 ## v0.3.7
 
 - Add log file option.
