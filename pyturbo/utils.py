@@ -1,6 +1,5 @@
 import logging
 import os
-from functools import partial
 
 from tqdm.autonotebook import tqdm
 
@@ -17,6 +16,8 @@ def progressbar(iterable=None, desc=None, total=None, *, silent=False,
 def get_logger(name, level=None, log_file=None):
     if level is None:
         level = logging.INFO if not Options.print_debug_log else logging.DEBUG
+    if log_file is None:
+        log_file = Options.log_file
     logger = logging.getLogger(name)
     logger.setLevel(level)
     if len(logger.handlers) > 0:

@@ -7,8 +7,6 @@ from .utils import get_logger
 
 ControlCommand = IntEnum('ControlCommand', ['End', 'Reset'])
 
-logger = get_logger(__name__)
-
 
 class ControlTask(object):
     '''
@@ -64,9 +62,10 @@ class Task(object):
 
     def fail(self):
         try:
-            self.finish(False)
+            self.finish(success=False)
         except:
-            logger.exception('Exception ignored for failed task: %s', self)
+            get_logger(__name__).exception(
+                'Exception ignored for failed task: %s', self)
         self.success = False
 
     def __repr__(self):

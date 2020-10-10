@@ -1,5 +1,9 @@
 # Version History
 
+## v0.3.7
+
+- Add log file option.
+
 ## v0.3.6
 
 - Pass exceptions through pipeline monitor.

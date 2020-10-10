@@ -28,7 +28,10 @@ class Options(object):
         self.single_sync_pipeline = False
         self.no_progress_bar = False
         self.print_debug_log = False
+        self.log_file = None
         for option in os.environ.get('PYTURBO_OPTIONS', '').split():
+            if option.startswith('log_file='):
+                self.log_file = option.split('=')[1]
             if not hasattr(self, option):
                 print('Warning: option %s unrecognized.' % (option))
                 continue
