@@ -1,6 +1,7 @@
 import faulthandler
 import os
 import resource
+import warnings
 
 try:
     '''
@@ -23,20 +24,29 @@ QUEUE_EXCEPTIONS = (BrokenPipeError, ConnectionResetError, EOFError,
 
 class Options(object):
 
+    raise_exception = False
+    single_sync_pipeline = False
+    no_progress_bar = False
+    print_debug_log = False
+    log_file = None
+
     def __init__(self):
-        self.raise_exception = False
-        self.single_sync_pipeline = False
-        self.no_progress_bar = False
-        self.print_debug_log = False
-        self.log_file = None
         for option in os.environ.get('PYTURBO_OPTIONS', '').split():
-            if option.startswith('log_file='):
-                self.log_file = option.split('=')[1]
+            fields = option.split('=')
+            if len(fields) > 2:
+                warnings.warn('Invalid option format: %s' % (option))
                 continue
-            if not hasattr(self, option):
-                print('Warning: option %s unrecognized.' % (option))
+            name = fields[0]
+            value = fields[1] if len(fields) == 2 else True
+            if not hasattr(self, name):
+                warnings.warn('Unrecognized option: %s' % (option))
                 continue
-            setattr(self, option, True)
+            setattr(self, name, value)
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        if name == 'log_file' and value is not None:
+            faulthandler.enable(open(value))
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(

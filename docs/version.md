@@ -1,5 +1,10 @@
 # Version History
 
+## v0.3.9
+
+- Redirect faulthandler log file.
+- Clean up imports.
+
 ## v0.3.8
 
 - Fix log file option env.

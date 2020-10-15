@@ -1,6 +1,6 @@
 import time
 from collections import namedtuple
-from enum import IntEnum, auto
+from enum import IntEnum
 from typing import Any, Union
 
 from .utils import get_logger

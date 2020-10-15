@@ -1,6 +1,5 @@
 import os
-from itertools import cycle
-from typing import Any, Dict, List, Union, Tuple
+from typing import Any, Dict, List, Union
 
 import GPUtil
 

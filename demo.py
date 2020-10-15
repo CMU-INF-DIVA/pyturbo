@@ -1,5 +1,4 @@
 import random
-import sys
 import time
 
 from pyturbo import Job, ReorderStage, Stage, System, Task, Options
