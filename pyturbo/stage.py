@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Union
 
 from .resource import Resources
 from .runtime import Options
@@ -14,14 +14,12 @@ class Stage(object):
     Worker number is desided based on how available resources are allocated.
     '''
 
-    def __init__(self, resources: Union[None, Resources] = None,
-                 result_queue_size: int = 32, **custom_args):
+    def __init__(self, resources: Optional[Resources] = None, **custom_args):
         self.resources = resources
         self.logger = get_logger(repr(self))
         self.resource_allocation = self.allocate_resource(
             resources, **custom_args)
         self.num_worker = len(self.resource_allocation)
-        self.result_queue_size = result_queue_size
 
     def allocate_resource(self, resources: Resources,
                           **custom_args) -> List[Resources]:
@@ -56,7 +54,7 @@ class Stage(object):
                              if self.current_resource is not None else '')
         self.logger = get_logger(name)
 
-    def run(self, task):
+    def run(self, task: Task) -> Union[Task, Iterable[Task]]:
         assert isinstance(task, Task), '%s is not a subclass of %s' % (
             type(task), Task)
         try:
@@ -94,11 +92,9 @@ class ReorderStage(Stage):
     Tasks are processed according to a pre-defined order.
     '''
 
-    def __init__(self, resources: Union[None, Resources] = None,
-                 result_queue_size: int = 32,
-                 reorder_buffer_size: int = 32, **custom_args):
-        super(ReorderStage, self).__init__(
-            resources, result_queue_size, **custom_args)
+    def __init__(self, resources: Optional[Resources] = None,
+                 reorder_buffer_size: int = 8, **custom_args):
+        super(ReorderStage, self).__init__(resources, **custom_args)
         assert self.num_worker == 1, 'ReorderStage must have only 1 worker.'
         self.reorder_buffer_size = reorder_buffer_size
 
@@ -121,13 +117,16 @@ class ReorderStage(Stage):
                     offset - len(self.reorder_buffer) + 1))
             self.reorder_buffer[offset] = task
         except:
-            self.reorder_buffer.insert(0, task)
+            if len(self.reorder_buffer) > 0 and self.reorder_buffer[0] is None:
+                self.reorder_buffer[0] = task
+            else:
+                self.reorder_buffer.insert(0, task)
         if len(self.reorder_buffer) > self.reorder_buffer_size:
             self.logger.warn(
                 'Reorder buffer size %d exceeds limit of %d',
                 len(self.reorder_buffer), self.reorder_buffer_size)
 
-    def iter_pop(self):
+    def iter_pop(self) -> Iterable[Task]:
         while len(self.reorder_buffer) > 0:
             if self.reorder_buffer[0] is not None:
                 task = self.reorder_buffer.popleft()
@@ -139,7 +138,7 @@ class ReorderStage(Stage):
             else:
                 break
 
-    def run(self, task):
+    def run(self, task) -> Iterable[Task]:
         assert isinstance(task, Task)
         self.logger.debug('Enqueue: %s', task)
         self.push(task)

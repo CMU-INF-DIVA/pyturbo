@@ -1,5 +1,15 @@
 # Version History
 
+## v0.4.0
+
+- Unified use of multiprocessing manager.
+- Timeout option for all blocking operations in the main process.
+- Use SimpleQueue for system job and result management.
+- Retry failed job and rebuild its pipeline.
+- Added system.wait_jobs interface.
+- Precisely ignore monitor exceptions during system termination.
+- Refined type annotation.
+
 ## v0.3.9
 
 - Redirect faulthandler log file.

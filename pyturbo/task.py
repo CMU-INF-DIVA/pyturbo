@@ -1,7 +1,7 @@
 import time
 from collections import namedtuple
 from enum import IntEnum
-from typing import Any, Union
+from typing import Any, Optional
 
 from .utils import get_logger
 
@@ -29,8 +29,9 @@ class Task(object):
     Regular excutable task.
     '''
 
-    def __init__(self, content: Any = None, meta: Union[None, dict] = None,
-                 *, parent_task=None):
+    def __init__(self, content: Optional[Any] = None,
+                 meta: Optional[dict] = None,
+                 *, parent_task: Optional[Any] = None):
         self.create_time = time.time()
         self.content = content
         self._build_meta(meta, parent_task)
@@ -49,7 +50,7 @@ class Task(object):
         self.current_stage = str(stage)
         return self
 
-    def finish(self, content: Any = None, success: bool = True):
+    def finish(self, content: Optional[Any] = None, success: bool = True):
         self.finish_time = time.time()
         if content is not None:
             self.content = content

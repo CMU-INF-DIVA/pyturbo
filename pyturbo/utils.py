@@ -1,18 +1,21 @@
 import logging
+from typing import Optional, Iterable
 
 from tqdm.autonotebook import tqdm
 
 from .runtime import Options
 
 
-def progressbar(iterable=None, desc=None, total=None, *, silent=False,
+def progressbar(iterable: Optional[Iterable] = None, desc: Optional[str] = None,
+                total: Optional[int] = None, *, silent: bool = False,
                 **kwargs):
     if not silent:
         return tqdm(iterable, desc, total, dynamic_ncols=True, **kwargs)
     return iterable
 
 
-def get_logger(name, level=None, log_file=None):
+def get_logger(name: str, level: Optional[int] = None,
+               log_file: Optional[str] = None):
     if level is None:
         level = logging.INFO if not Options.print_debug_log else logging.DEBUG
     if log_file is None:

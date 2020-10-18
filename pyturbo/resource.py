@@ -1,5 +1,6 @@
 import os
-from typing import Any, Dict, List, Union
+from copy import deepcopy
+from typing import Any, Dict, List, Optional
 
 import GPUtil
 
@@ -16,7 +17,13 @@ class Resources(object):
         else:
             self.resources = self.scan(**scan_args)
 
-    def get(self, name: str, limit: Union[None, int] = None):
+    def __add__(self, other):
+        new_resources = deepcopy(self.resources)
+        for key, value in other.resources.items():
+            new_resources.setdefault(key, []).extend(value)
+        return self.__class__(new_resources)
+
+    def get(self, name: str, limit: Optional[int] = None):
         return self.resources.get(name, [])[:limit]
 
     def scan(self, gpu_load: float = 0.1, gpu_memory: float = 0.1):
