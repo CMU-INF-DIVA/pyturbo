@@ -15,6 +15,7 @@ class Pipeline(object):
 
     def __init__(self, stages: List[Stage]):
         self.stages = stages
+        self.terminated = False
 
 
 class SyncPipeline(Pipeline):
@@ -79,7 +80,6 @@ class AsyncPipeline(Pipeline):
             self.worker_groups.append(group)
             job_queue = group.result_queue
         self.result_queue = job_queue
-        self.terminated = False
 
     def start(self, timeout: Optional[int] = 1):
         for group in self.worker_groups:

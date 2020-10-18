@@ -1,5 +1,9 @@
 # Version History
 
+## v0.4.1
+
+- Fix compatibility of SyncPipeline.
+
 ## v0.4.0
 
 - Unified use of multiprocessing manager.

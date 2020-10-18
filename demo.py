@@ -104,8 +104,7 @@ def main(n_job=9):
         job = Job(name, task, y)
         system.add_job(job)
     try:
-        for _ in range(9):
-            job = system.result_queue.get()
+        for job in system.wait_jobs(n_job):
             x, y = job.task.content
             assert job.results == [*range(-x, -x - y, -1)]
         system.end()

@@ -64,8 +64,11 @@ class MySystem(System):
 def main():
     system = MySystem(num_pipeline) # Set debug=True to run in a single process
     system.start() # Build and start system
-    system.add_job(...) # Submit one job
-    finished_job = system.result_queue.get() # Wait for result
+    jobs = [...]
+    for job in jobs: # Submit jobs
+        system.add_job(job)
+    for job in system.wait_jobs(len(jobs)):
+        print(job.results) # Process result
     system.end() # End system
 ```
 

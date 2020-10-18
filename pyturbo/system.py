@@ -202,7 +202,7 @@ class System(object):
             self.job_queue.put(None, timeout=timeout)
             self.monit_pipeline(0)
 
-    def wait_jobs(self, num_jobs: int, *, timeout: Optional[int] = 1200):
+    def wait_jobs(self, num_jobs: int = 1, *, timeout: Optional[int] = 1200):
         for _ in range(num_jobs):
             job = self.result_queue.get(timeout=timeout)
             if job is None:
