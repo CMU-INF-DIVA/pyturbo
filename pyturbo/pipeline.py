@@ -25,7 +25,7 @@ class SyncPipeline(Pipeline):
     All stages run in the main process.
     '''
 
-    def __init__(self,  stages: List[Stage], queue_size: int = 8):
+    def __init__(self,  stages: List[Stage], queue_size: int = 16):
         super(SyncPipeline, self).__init__(stages)
 
     def start(self, timeout: Optional[int] = 1):
@@ -68,7 +68,7 @@ class AsyncPipeline(Pipeline):
     Asynchronized pipeline powered by multiprocessing.
     '''
 
-    def __init__(self, stages: List[Stage], queue_size: Optional[int] = 8):
+    def __init__(self, stages: List[Stage], queue_size: Optional[int] = 16):
         super(AsyncPipeline, self).__init__(stages)
         self.manager = mp.Manager()
         self.job_queue = self.manager.Queue()
@@ -110,7 +110,7 @@ class AsyncPipeline(Pipeline):
         for group in self.worker_groups:
             group.join(timeout)
 
-    def terminate(self, timeout: Optional[int] = 1):
+    def terminate(self, timeout: Optional[int] = 3):
         for group in self.worker_groups:
             group.terminate(timeout)
         self.terminated = True

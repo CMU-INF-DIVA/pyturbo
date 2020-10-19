@@ -1,5 +1,10 @@
 # Version History
 
+## v0.4.4
+
+- Remove close process to avoid bug and set longer terminate timeout.
+- Larger pipeline queue size and longer task and job timeouts.
+
 ## v0.4.3
 
 - Concurrency optimization for system.

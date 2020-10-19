@@ -40,8 +40,8 @@ class System(object):
     A system consists of multiple peer pipelines.
     '''
 
-    def __init__(self, *, pipeline_queue_size: int = 8,
-                 task_timeout: Optional[int] = 10,
+    def __init__(self, *, pipeline_queue_size: int = 16,
+                 task_timeout: Optional[int] = 60,
                  queue_timeout: Optional[int] = 1,
                  resource_scan_args={}, **custom_args):
         self.pipeline_queue_size = pipeline_queue_size
@@ -193,7 +193,7 @@ class System(object):
         for job in jobs:
             self.add_job(job, timeout=timeout)
 
-    def wait_job(self, *, timeout: Optional[int] = 1200):
+    def wait_job(self, *, timeout: Optional[int] = 3600):
         job = None
         for _ in range(self.num_pipeline):
             job = self.result_queue.get(timeout=timeout)
@@ -210,7 +210,7 @@ class System(object):
                 self.result_count, self.job_count))
         return job
 
-    def wait_jobs(self, num_jobs: int, *, timeout: Optional[int] = 1200):
+    def wait_jobs(self, num_jobs: int, *, timeout: Optional[int] = 3600):
         for _ in range(num_jobs):
             yield self.wait_job(timeout=timeout)
 
@@ -230,7 +230,7 @@ class System(object):
             self.progressbar.close()
         self.logger.info('Ended')
 
-    def terminate(self, *, timeout: Optional[int] = 1):
+    def terminate(self, *, timeout: Optional[int] = 3):
         self.logger.exception('Terminating')
         self.ending.set()
         for pipeline in self.pipelines:

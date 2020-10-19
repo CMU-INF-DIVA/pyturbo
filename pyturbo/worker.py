@@ -1,7 +1,5 @@
 from typing import Optional
 
-from retrying import retry
-
 from .runtime import QUEUE_EXCEPTIONS, mp
 from .stage import Stage
 from .task import ControlCommand, ControlTask, Task
@@ -37,10 +35,8 @@ class WorkerGroup(object):
             if process._closed:
                 continue
             process.join(timeout)
-            if process.exitcode is not None:
-                process.close()
 
-    def terminate(self, timeout: Optional[int] = 1):
+    def terminate(self, timeout: Optional[int] = 3):
         for process in self.processes:
             if process._closed:
                 continue
