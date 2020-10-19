@@ -1,9 +1,14 @@
 # Version History
 
+## v0.4.3
+
+- Concurrency optimization for system.
+- Add add_jobs and wait_job methods.
+
 ## v0.4.2
 
 - Smooth system ending when some pipelines terminate early.
-- Fix repr of ControlTask
+- Fix repr of ControlTask.
 
 ## v0.4.1
 

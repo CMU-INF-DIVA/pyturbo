@@ -96,13 +96,15 @@ class ToySystem(System):
 def main(n_job=9):
     system = ToySystem()
     system.start()
+    jobs = []
     for _ in range(n_job):
         x = random.randint(0, 9000)
         y = random.randint(200, 400)
         task = Task((x, y), {'x': x, 'y': y})
         name = '%d_%d' % (x, y)
         job = Job(name, task, y)
-        system.add_job(job)
+        jobs.append(job)
+    system.add_jobs(jobs)
     try:
         for job in system.wait_jobs(n_job):
             x, y = job.task.content

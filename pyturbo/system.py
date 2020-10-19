@@ -1,6 +1,6 @@
 from functools import partial
 from queue import SimpleQueue
-from threading import Lock, Thread
+from threading import Event, Thread
 from typing import Any, Iterable, List, Optional
 
 from .pipeline import AsyncPipeline, SyncPipeline
@@ -25,8 +25,9 @@ class Job(object):
         self.max_retry = max_retry
         self.results = None
 
-    def finish(self, results: Any):
+    def finish(self, results: Any, pipeline_id: int):
         self.results = results
+        self.pipeline_id = pipeline_id
 
     def __repr__(self):
         return '%s(%s, len=%d)' % (
@@ -66,9 +67,8 @@ class System(object):
                 'Production mode: %d AsyncPipelines', self.num_pipeline)
         self.job_queue = SimpleQueue()
         self.result_queue = SimpleQueue()
+        self.ending = Event()
         self.job_count, self.result_count = 0, 0
-        self.ending = False
-        self.thread_lock = Lock()
         self.build()
 
     def get_num_pipeline(self, resources: Resources) -> int:
@@ -118,13 +118,15 @@ class System(object):
                     results = self.get_results(job, results_gen)
                     if self.debug_mode:
                         pipeline.reset(self.queue_timeout)
-                    job.finish(results)
+                    job.finish(results, pipeline_id)
+                    if Options.no_progress_bar:
+                        self.logger.info('Pipeline %d: processed job: %s',
+                                         job.pipeline_id, job.name)
                 except Exception as e:
-                    with self.thread_lock:
-                        if self.ending:
-                            return
+                    if self.ending.is_set():
+                        return
                     self.logger.exception(
-                        'Pipeline %d: %s failed', pipeline_id, job)
+                        'Pipeline %d: failed job: %s', pipeline_id, job.name)
                     if job.max_retry > 0:
                         job.max_retry -= 1
                         self.logger.info(
@@ -138,24 +140,9 @@ class System(object):
                         raise e
                     continue
                 self.result_queue.put(job, timeout=self.queue_timeout)
-                with self.thread_lock:
-                    self.result_count += 1
-                    if not Options.no_progress_bar:
-                        self.progressbar.update()
-                if Options.no_progress_bar:
-                    self.logger.info('Pipeline %d: processed job: %s',
-                                     pipeline_id, job.name)
-                    self.logger.info('Jobs processed / total: %d / %d' % (
-                        self.result_count, self.job_count))
         except Exception as e:
             self.logger.exception('Pipeline %d: dead', pipeline_id)
-            with self.thread_lock:
-                self.num_pipeline -= 1
-                if self.num_pipeline == 0:
-                    try:
-                        self.result_queue.put(None, timeout=self.task_timeout)
-                    except:
-                        pass
+            self.result_queue.put(None, timeout=self.task_timeout)
             if Options.raise_exception:
                 raise e
 
@@ -202,17 +189,34 @@ class System(object):
             self.job_queue.put(None, timeout=timeout)
             self.monit_pipeline(0)
 
-    def wait_jobs(self, num_jobs: int = 1, *, timeout: Optional[int] = 1200):
-        for _ in range(num_jobs):
+    def add_jobs(self, jobs: List[Job], *, timeout: Optional[int] = 1):
+        for job in jobs:
+            self.add_job(job, timeout=timeout)
+
+    def wait_job(self, *, timeout: Optional[int] = 1200):
+        job = None
+        for _ in range(self.num_pipeline):
             job = self.result_queue.get(timeout=timeout)
             if job is None:
-                raise ValueError('All pipelines dead')
-            yield job
+                self.num_pipeline -= 1
+                if self.num_pipeline == 0:
+                    raise ValueError('All pipelines dead')
+            break
+        self.result_count += 1
+        if not Options.no_progress_bar:
+            self.progressbar.update()
+        else:
+            self.logger.info('Jobs processed / total: %d / %d' % (
+                self.result_count, self.job_count))
+        return job
+
+    def wait_jobs(self, num_jobs: int, *, timeout: Optional[int] = 1200):
+        for _ in range(num_jobs):
+            yield self.wait_job(timeout=timeout)
 
     def end(self, *, timeout: Optional[int] = 1):
         self.logger.info('Ending')
-        with self.thread_lock:
-            self.ending = True
+        self.ending.set()
         for pipeline in self.pipelines:
             pipeline.end(timeout)
         for pipeline in self.pipelines:
@@ -228,8 +232,7 @@ class System(object):
 
     def terminate(self, *, timeout: Optional[int] = 1):
         self.logger.exception('Terminating')
-        with self.thread_lock:
-            self.ending = True
+        self.ending.set()
         for pipeline in self.pipelines:
             pipeline.terminate(timeout)
         if not self.debug_mode:
