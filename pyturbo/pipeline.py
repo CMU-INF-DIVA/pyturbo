@@ -111,8 +111,6 @@ class AsyncPipeline(Pipeline):
             group.join(timeout)
 
     def terminate(self, timeout: Optional[int] = 1):
-        if self.terminated:
-            return
         for group in self.worker_groups:
             group.terminate(timeout)
         self.terminated = True

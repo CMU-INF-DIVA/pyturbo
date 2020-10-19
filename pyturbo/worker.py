@@ -34,13 +34,16 @@ class WorkerGroup(object):
 
     def join(self, timeout: Optional[int] = 1):
         for process in self.processes:
+            if process._closed:
+                continue
             process.join(timeout)
-        for process in self.processes:
             if process.exitcode is not None:
                 process.close()
 
     def terminate(self, timeout: Optional[int] = 1):
         for process in self.processes:
+            if process._closed:
+                continue
             process.terminate()
         self.join(timeout)
 

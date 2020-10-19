@@ -127,7 +127,7 @@ class System(object):
                         'Pipeline %d: %s failed', pipeline_id, job)
                     if job.max_retry > 0:
                         job.max_retry -= 1
-                        self.logger.exception(
+                        self.logger.info(
                             'Pipeline %d: %s will retry (%d chances left)',
                             pipeline_id, job, job.max_retry)
                         self.job_queue.put(job, timeout=self.queue_timeout)

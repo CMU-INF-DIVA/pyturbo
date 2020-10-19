@@ -17,7 +17,7 @@ class ControlTask(object):
         self.command = command
 
     def __repr__(self):
-        return super(ControlTask, self).__repr__(self.command.name)
+        return '%s(%s)' % (self.__class__.__name__, self.command.name)
 
 
 TaskLog = namedtuple('TaskLog', [

@@ -1,5 +1,10 @@
 # Version History
 
+## v0.4.2
+
+- Smooth system ending when some pipelines terminate early.
+- Fix repr of ControlTask
+
 ## v0.4.1
 
 - Fix compatibility of SyncPipeline.
