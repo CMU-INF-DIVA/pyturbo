@@ -1,5 +1,9 @@
 # Version History
 
+## v0.4.5
+
+- More robust retry of jobs.
+
 ## v0.4.4
 
 - Remove close process to avoid bug and set longer terminate timeout.

@@ -88,17 +88,22 @@ class System(object):
         return results
 
     def monit_pipeline(self, pipeline_id: int):
+        job, job_ok = None, True
+        pipeline_ok = True
         try:
             while True:
                 job = self.job_queue.get()
+                job_ok = False
                 if job is None:
                     return
                 pipeline = self.pipelines[pipeline_id]
-                if pipeline.terminated:
+                if not pipeline_ok:
                     self.logger.info('Pipeline %d: restarting', pipeline_id)
+                    pipeline.terminate()
                     pipeline = self.pipeline_fns[pipeline_id]()
                     pipeline.start()
                     self.pipelines[pipeline_id] = pipeline
+                pipeline_ok = False
                 try:
                     if Options.no_progress_bar:
                         self.logger.info('Pipeline %d: processing job: %s',
@@ -118,6 +123,9 @@ class System(object):
                     results = self.get_results(job, results_gen)
                     if self.debug_mode:
                         pipeline.reset(self.queue_timeout)
+                    pipeline_ok = True
+                    if results is None:
+                        raise ValueError('Empty results from %s' % (job.name))
                     job.finish(results, pipeline_id)
                     if Options.no_progress_bar:
                         self.logger.info('Pipeline %d: processed job: %s',
@@ -133,16 +141,23 @@ class System(object):
                             'Pipeline %d: %s will retry (%d chances left)',
                             pipeline_id, job, job.max_retry)
                         self.job_queue.put(job, timeout=self.queue_timeout)
-                    else:
-                        self.result_queue.put(job, timeout=self.queue_timeout)
-                    pipeline.terminate(self.queue_timeout)
+                        job_ok = True
                     if Options.raise_exception:
                         raise e
-                    continue
-                self.result_queue.put(job, timeout=self.queue_timeout)
+                finally:
+                    if not job_ok:
+                        self.result_queue.put(job, timeout=self.queue_timeout)
+                        job_ok = True
         except Exception as e:
             self.logger.exception('Pipeline %d: dead', pipeline_id)
-            self.result_queue.put(None, timeout=self.task_timeout)
+            if not job_ok:
+                if job.max_retry > 0:
+                    job.max_retry -= 1
+                    self.logger.info(
+                        'Pipeline %d: %s will retry (%d chances left)',
+                        pipeline_id, job, job.max_retry)
+                    self.job_queue.put(job, timeout=self.queue_timeout)
+            self.result_queue.put(None, timeout=self.queue_timeout)
             if Options.raise_exception:
                 raise e
 
