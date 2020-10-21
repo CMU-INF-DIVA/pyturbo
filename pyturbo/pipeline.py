@@ -15,7 +15,6 @@ class Pipeline(object):
 
     def __init__(self, stages: List[Stage]):
         self.stages = stages
-        self.terminated = False
 
 
 class SyncPipeline(Pipeline):
@@ -80,6 +79,8 @@ class AsyncPipeline(Pipeline):
             self.worker_groups.append(group)
             job_queue = group.result_queue
         self.result_queue = job_queue
+        self.resetting = False
+        self.terminated = False
 
     def start(self, timeout: Optional[int] = 1):
         for group in self.worker_groups:
@@ -87,19 +88,25 @@ class AsyncPipeline(Pipeline):
         self.reset(timeout)
 
     def reset(self, timeout: Optional[int] = 1):
+        assert not self.resetting, 'Cannot reset when reset is in progress'
         reset_task = ControlTask(ControlCommand.Reset)
         for _ in range(self.stages[0].num_worker):
             self.job_queue.put(reset_task, timeout=timeout)
+        self.resetting = True
 
     def wait(self, timeout: Optional[int] = None):
         while True:
             result = self.result_queue.get(timeout=timeout)
             if isinstance(result, ControlTask):
+                if result.command == ControlCommand.Reset:
+                    self.resetting = False
                 break
             else:
                 yield result
 
     def end(self, timeout: Optional[int] = 1):
+        if self.terminated:
+            return
         end_task = ControlTask(ControlCommand.End)
         for _ in range(self.stages[0].num_worker):
             self.job_queue.put(end_task, timeout=timeout)

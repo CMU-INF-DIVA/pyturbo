@@ -1,5 +1,13 @@
 # Version History
 
+## v0.5.0
+
+- Fix pipeline restarting.
+- Larger default timeouts controled by start method.
+- Job retry logic moved to wait_job.
+- Prevent resetting a pipeline multiple times.
+- Ensure job queue and result queue empty when ending.
+
 ## v0.4.5
 
 - More robust retry of jobs.
