@@ -93,10 +93,11 @@ class ReorderStage(Stage):
     '''
 
     def __init__(self, resources: Optional[Resources] = None,
-                 reorder_buffer_size: int = 8, **custom_args):
+                 reorder_buffer_size: int = 16, **custom_args):
         super(ReorderStage, self).__init__(resources, **custom_args)
         assert self.num_worker == 1, 'ReorderStage must have only 1 worker.'
         self.reorder_buffer_size = reorder_buffer_size
+        self.reorder_buffer_size_record = reorder_buffer_size
 
     def get_sequence_id(self, task: Task) -> int:
         '''
@@ -121,7 +122,8 @@ class ReorderStage(Stage):
                 self.reorder_buffer[0] = task
             else:
                 self.reorder_buffer.insert(0, task)
-        if len(self.reorder_buffer) > self.reorder_buffer_size:
+        if len(self.reorder_buffer) > self.reorder_buffer_size_record:
+            self.reorder_buffer_size_record = len(self.reorder_buffer)
             self.logger.warn(
                 'Reorder buffer size %d exceeds limit of %d',
                 len(self.reorder_buffer), self.reorder_buffer_size)

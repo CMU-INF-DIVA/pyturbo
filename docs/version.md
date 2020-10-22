@@ -1,5 +1,9 @@
 # Version History
 
+## v0.5.2
+
+- Reduce warnings of reorder buffer size.
+
 ## v0.5.1
 
 - More robust handling of pipeline death.
