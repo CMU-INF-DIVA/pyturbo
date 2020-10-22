@@ -206,8 +206,9 @@ class System(object):
             self.monit_pipeline(0)
         while self.num_pipeline > 0:
             job = self.result_queue.get(timeout=job_timeout)
-            if job is None and not self.debug_mode:
+            if job is None:
                 self.num_pipeline -= 1
+                continue
             if not job.success:
                 if job.retry > 0:
                     job.retry -= 1

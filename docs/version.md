@@ -1,5 +1,9 @@
 # Version History
 
+## v0.5.1
+
+- More robust handling of pipeline death.
+
 ## v0.5.0
 
 - Fix pipeline restarting.
