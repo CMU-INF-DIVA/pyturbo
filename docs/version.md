@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.0
+
+- Add result class and seperate result collection and merge logics.
+
 ## v0.5.2
 
 - Reduce warnings of reorder buffer size.

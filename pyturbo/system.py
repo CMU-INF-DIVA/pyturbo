@@ -1,6 +1,6 @@
+import queue
 from functools import partial
 from queue import SimpleQueue
-import queue
 from threading import Event, Thread
 from typing import Any, Iterable, List, Optional
 
@@ -15,7 +15,8 @@ from .utils import get_logger, progressbar
 class Job(object):
 
     '''
-    A job for the system. A job is a wrapper over a task for the first stage.
+    A job for the system. A job typically contains a task for the first stage 
+    and some meta data.
     '''
 
     def __init__(self, name: str, task: Task, length: Optional[int] = None,
@@ -25,15 +26,46 @@ class Job(object):
         self.length = length
         self.retry = max_retry
         self.success = False
+        self.results = None
 
-    def finish(self, results: Any, pipeline_id: int):
-        self.results = results
+    def finish(self, pipeline_id: int):
         self.pipeline_id = pipeline_id
         self.success = True
 
     def __repr__(self):
         return '%s(%s, len=%d, retry=%d)' % (
             self.__class__.__name__, self.name, self.length, self.retry)
+
+
+class Result(object):
+
+    '''
+    A result container for a job.
+    '''
+
+    def __init__(self):
+        self.results = []
+        self.failed_tasks = []
+        self.task_count = 0
+
+    def __len__(self):
+        return self.task_count
+
+    def collect(self, task):
+        '''
+        Collect result from a task, called in System.monit_pipeline.
+        '''
+        self.task_count += 1
+        if task.success:
+            self.results.append(task.content)
+        else:
+            self.failed_tasks.append(task)
+
+    def merge(self, job):
+        '''
+        Merge and post-process collected results, called in System.wait_job.
+        '''
+        return
 
 
 class System(object):
@@ -78,12 +110,18 @@ class System(object):
         '''
         raise NotImplementedError
 
-    def get_results(self, job: Job, results_gen: Iterable[Task]) -> Any:
+    def collect_results(self, job: Job, results_gen: Iterable[Task], *,
+                        result_cls: type = Result):
         '''
         Define how to extract final results from output tasks.
         '''
-        results = [task.content for task in results_gen]
-        return results
+        job.results = result_cls()
+        for task in results_gen:
+            try:
+                job.results.collect(task)
+            except:
+                self.logger.exception(
+                    'Failed to collect results from %s', task)
 
     def monit_pipeline(self, pipeline_id: int, *,
                        task_timeout: Optional[int] = None,
@@ -121,13 +159,11 @@ class System(object):
                             pipeline_id, job.name),
                         total=job.length, position=pipeline_id, leave=False,
                         silent=Options.no_progress_bar)
-                    results = self.get_results(job, results_gen)
+                    self.collect_results(job, results_gen)
                     if self.debug_mode:
                         pipeline.reset(queue_timeout)
                     pipeline_ok = True
-                    if results is None:
-                        raise ValueError('Empty results from %s' % (job))
-                    job.finish(results, pipeline_id)
+                    job.finish(pipeline_id)
                     if Options.no_progress_bar:
                         logger.info('Processed: %s', job)
                 except Exception as e:
@@ -145,6 +181,7 @@ class System(object):
         except Exception as e:
             logger.exception('Dead')
             if not job_ok:
+                job.retry += 1
                 self.result_queue.put(job, timeout=queue_timeout)
                 job_ok = True
             self.result_queue.put(None, timeout=queue_timeout)
@@ -215,10 +252,20 @@ class System(object):
                     self.logger.info('Enqueue for retry: %s', job)
                     self.job_queue.put(job, timeout=queue_timeout)
                     continue
-                self.logger.warn('Failed: %s', job)
+                if job.results is not None:
+                    self.logger.warn(
+                        'Partial results collected / total: %d / %d from %s',
+                        len(job.results), job.length, job)
+                else:
+                    self.logger.warn('Failed: %s', job)
             break
         else:
             raise ValueError('All pipelines dead')
+        if job.results is not None:
+            try:
+                job.results.merge(job)
+            except:
+                self.logger.exception('Failed to merge results: %s', job)
         self.result_count += 1
         if not Options.no_progress_bar:
             self.progressbar.update()
