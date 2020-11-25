@@ -108,7 +108,7 @@ def main(n_job=9):
     try:
         for job in system.wait_jobs(n_job):
             x, y = job.task.content
-            assert job.results == [*range(-x, -x - y, -1)]
+            assert job.results.results == [*range(-x, -x - y, -1)]
         system.end()
     except:
         system.terminate()

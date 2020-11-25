@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.1
+
+- More robust about raising ulimit.
+
 ## v0.6.0
 
 - Add result class and seperate result collection and merge logics.

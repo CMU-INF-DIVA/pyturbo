@@ -8,10 +8,14 @@ try:
     Prefer Pytorch's multiprocessing module for optimized sharing of Tensor
     '''
     import torch.multiprocessing as mp
-    try:
-        resource.setrlimit(resource.RLIMIT_NOFILE, (1048576, 1048576))
-    except:
-        mp.set_sharing_strategy('file_system')
+    hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+    resource.setrlimit(resource.RLIMIT_NOFILE, (hard_limit, hard_limit))
+    if hard_limit < 51200:
+        warnings.warn(
+            'Ulimit of open files (%d) is too small. If errors of unable to '
+            'open files occur, try add the following in your start '
+            'script: `torch.mp.set_sharing_strategy("file_system")`' % (
+                hard_limit))
 except ImportError:
     import multiprocessing as mp
 
