@@ -78,6 +78,8 @@ class Resources(object):
         return [int(round(value * length)) if value is not None else None
                 for value in values]
 
+    def __str__(self):
+        return ', '.join(['%s=%s' % (k, v) for k, v in self.resources.items()])
+
     def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(
-            ['%s=%s' % (k, v) for k, v in self.resources.items()]))
+        return '%s(%s)' % (self.__class__.__name__, str(self))

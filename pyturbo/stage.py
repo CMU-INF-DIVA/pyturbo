@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Union
 
 from .resource import Resources
 from .runtime import Options
@@ -14,7 +14,7 @@ class Stage(object):
     Worker number is desided based on how available resources are allocated.
     '''
 
-    def __init__(self, resources: Optional[Resources] = None, **custom_args):
+    def __init__(self, resources: Resources, **custom_args):
         self.resources = resources
         self.logger = get_logger(repr(self))
         self.resource_allocation = self.allocate_resource(
@@ -79,10 +79,10 @@ class Stage(object):
                 yield task
 
     def __repr__(self):
-        return '%s%s%s' % (
-            self.__class__.__name__,
-            '(x%d)' % (self.num_worker) if hasattr(self, 'num_worker') else '',
-            '@' + str(self.resources) if self.resources is not None else '')
+        if hasattr(self, 'num_worker'):
+            return '%s(x%d)@(%s)' % (self.__class__.__name__, self.num_worker,
+                                     self.resources)
+        return self.__class__.__name__
 
 
 class ReorderStage(Stage):
@@ -92,8 +92,8 @@ class ReorderStage(Stage):
     Tasks are processed according to a pre-defined order.
     '''
 
-    def __init__(self, resources: Optional[Resources] = None,
-                 reorder_buffer_size: int = 16, **custom_args):
+    def __init__(self, resources: Resources, reorder_buffer_size: int = 16,
+                 **custom_args):
         super(ReorderStage, self).__init__(resources, **custom_args)
         assert self.num_worker == 1, 'ReorderStage must have only 1 worker.'
         self.reorder_buffer_size = reorder_buffer_size

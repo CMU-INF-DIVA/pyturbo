@@ -1,5 +1,10 @@
 # Version History
 
+## v0.6.2
+
+- Simplity logging content.
+- Resource required for each stage.
+
 ## v0.6.1
 
 - More robust about raising ulimit.

@@ -1,8 +1,7 @@
-import queue
 from functools import partial
 from queue import SimpleQueue
 from threading import Event, Thread
-from typing import Any, Iterable, List, Optional
+from typing import Iterable, List, Optional
 
 from .pipeline import AsyncPipeline, SyncPipeline
 from .resource import Resources
@@ -87,14 +86,14 @@ class System(object):
         else:
             self.pipeline_cls = AsyncPipeline
         self.logger = get_logger(repr(self))
-        self.logger.info('Available resources: %s', repr(self.resources))
-        self.logger.info('Running with Options: %s', repr(Options))
+        self.logger.info(repr(self.resources))
+        self.logger.info(repr(Options))
         if self.debug_mode:
             self.logger.info(
-                'Debug mode: one SyncPipeline in a single process.')
+                'Debug mode, one SyncPipeline')
         else:
             self.logger.info(
-                'Production mode: %d AsyncPipelines', self.num_pipeline)
+                'Production mode, %d AsyncPipelines', self.num_pipeline)
         self.job_queue = SimpleQueue()
         self.result_queue = SimpleQueue()
         self.ending = Event()

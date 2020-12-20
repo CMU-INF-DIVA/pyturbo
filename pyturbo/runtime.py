@@ -52,10 +52,13 @@ class Options(object):
         if name == 'log_file' and value is not None:
             faulthandler.enable(open(value))
 
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(
+    def __str__(self):
+        return ', '.join(
             ['%s=%s' % (k, v) for k, v in self.__dict__.items()
-             if not k.startswith('_') and v]) or 'None')
+             if not k.startswith('_') and v]) or 'None'
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, str(self))
 
 
 Options = Options()
