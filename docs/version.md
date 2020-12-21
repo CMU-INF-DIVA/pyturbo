@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.3
+
+- Add process_map util.
+
 ## v0.6.2
 
 - Simplity logging content.

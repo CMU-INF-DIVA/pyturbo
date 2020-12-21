@@ -1,6 +1,8 @@
 import logging
-from typing import Optional, Iterable
+import multiprocessing
+from typing import Iterable, Optional
 
+import psutil
 from tqdm.autonotebook import tqdm
 
 from .runtime import Options
@@ -10,6 +12,9 @@ def progressbar(iterable: Optional[Iterable] = None, desc: Optional[str] = None,
                 total: Optional[int] = None, *, silent: bool = False,
                 **kwargs):
     if not silent:
+        identity = multiprocessing.current_process()._identity
+        if 'position' not in kwargs and len(identity):
+            kwargs['position'] = identity[0]
         return tqdm(iterable, desc, total, dynamic_ncols=True, **kwargs)
     return iterable
 
@@ -34,3 +39,11 @@ def get_logger(name: str, level: Optional[int] = None,
         handler.setFormatter(formatter)
         logger.addHandler(handler)
     return logger
+
+
+def process_map(worker, jobs, num_worker=None):
+    if num_worker is None:
+        num_worker = len(psutil.Process().cpu_affinity())
+    with multiprocessing.Pool(num_worker) as pool:
+        yield from progressbar(
+            pool.imap_unordered(worker, jobs), 'Jobs', len(jobs))
