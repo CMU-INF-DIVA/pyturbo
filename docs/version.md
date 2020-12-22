@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.4
+
+- Use cpu affinity in resource scan.
+
 ## v0.6.3
 
 - Add process_map util.

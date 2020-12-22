@@ -1,8 +1,8 @@
-import os
 from copy import deepcopy
 from typing import Any, Dict, List, Optional
 
 import GPUtil
+import psutil
 
 
 class Resources(object):
@@ -30,7 +30,7 @@ class Resources(object):
         '''
         Initial global scan for a system.
         '''
-        resources = {'cpu': [*range(os.cpu_count())]}
+        resources = {'cpu': psutil.Process().cpu_affinity()}
         gpus = GPUtil.getAvailable(
             limit=100, maxLoad=gpu_load, maxMemory=gpu_memory)
         if len(gpus) > 0:
