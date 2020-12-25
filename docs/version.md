@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.5
+
+- Fix repr.
+
 ## v0.6.4
 
 - Use cpu affinity in resource scan.

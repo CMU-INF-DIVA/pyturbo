@@ -32,7 +32,7 @@ class Job(object):
         self.success = True
 
     def __repr__(self):
-        return '%s(%s, len=%d, retry=%d)' % (
+        return '%s(%s, len=%s, retry=%d)' % (
             self.__class__.__name__, self.name, self.length, self.retry)
 
 

@@ -49,9 +49,8 @@ class Stage(object):
     def init(self, worker_id: int = 0):
         self.worker_id = worker_id
         self.current_resource = self.resource_allocation[worker_id]
-        name = '%s[%d]%s' % (self.__class__.__name__, worker_id,
-                             '@' + str(self.current_resource)
-                             if self.current_resource is not None else '')
+        name = '%s[%d]@(%s)' % (self.__class__.__name__, worker_id,
+                                self.current_resource)
         self.logger = get_logger(name)
 
     def run(self, task: Task) -> Union[Task, Iterable[Task]]:
