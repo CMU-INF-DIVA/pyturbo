@@ -41,9 +41,9 @@ def get_logger(name: str, level: Optional[int] = None,
     return logger
 
 
-def process_map(worker, jobs, num_worker=None):
+def process_map(worker, jobs, num_worker=None, **kwargs):
     if num_worker is None:
         num_worker = len(psutil.Process().cpu_affinity())
     with multiprocessing.Pool(num_worker) as pool:
         yield from progressbar(
-            pool.imap_unordered(worker, jobs), 'Jobs', len(jobs))
+            pool.imap_unordered(worker, jobs), total=len(jobs), **kwargs)

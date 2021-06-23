@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.6
+
+- Optimize process_map util.
+
 ## v0.6.5
 
 - Fix repr.
