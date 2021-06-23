@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.7
+
+- Fix utils mp backend.
+
 ## v0.6.6
 
 - Optimize process_map util.
