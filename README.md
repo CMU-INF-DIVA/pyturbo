@@ -37,8 +37,8 @@ from pyturbo import ReorderStage, Stage, System
 
 class Stage1(Stage): # Define a stage
 
-    def __init__(self, resources):
-        ... # Optional: set resources and number of workers
+    def allocate_resource(self, resources, ...):
+        ... # Optional: split resources and determine number of workers.
 
     def process(self, task):
         ... # Process function for each worker process. Returns one or a series of downstream tasks.

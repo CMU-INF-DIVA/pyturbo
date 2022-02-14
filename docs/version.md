@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.8
+
+- Update docs and requirements.
+
 ## v0.6.7
 
 - Fix utils mp backend.
