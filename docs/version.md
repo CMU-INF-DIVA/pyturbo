@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.9
+
+- Handle exception from GPUtil.
+
 ## v0.6.8
 
 - Update docs and requirements.

@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from typing import Any, Dict, List, Optional
 
@@ -31,10 +32,14 @@ class Resources(object):
         Initial global scan for a system.
         '''
         resources = {'cpu': psutil.Process().cpu_affinity()}
-        gpus = GPUtil.getAvailable(
-            limit=100, maxLoad=gpu_load, maxMemory=gpu_memory)
-        if len(gpus) > 0:
-            resources['gpu'] = gpus
+        try:
+            gpus = GPUtil.getAvailable(
+                limit=100, maxLoad=gpu_load, maxMemory=gpu_memory)
+            if len(gpus) > 0:
+                resources['gpu'] = gpus
+        except Exception as e:
+            warnings.warn(
+                f'GPU resources unavailable due to scan failure: {repr(e)}', RuntimeWarning)
         return resources
 
     def split(self, num_split: int):
