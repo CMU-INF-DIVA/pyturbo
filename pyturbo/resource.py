@@ -1,3 +1,4 @@
+import os
 import warnings
 from copy import deepcopy
 from typing import Any, Dict, List, Optional
@@ -35,6 +36,11 @@ class Resources(object):
         try:
             gpus = GPUtil.getAvailable(
                 limit=100, maxLoad=gpu_load, maxMemory=gpu_memory)
+            visible_gpus = os.environ.get('CUDA_VISIBLE_DEVICES')
+            if visible_gpus is not None:
+                gpus = [*map(int, visible_gpus.split(','))]
+            # Remove env for correct GPU indices in subprocesses
+            del os.environ['CUDA_VISIBLE_DEVICES']
             if len(gpus) > 0:
                 resources['gpu'] = gpus
         except Exception as e:

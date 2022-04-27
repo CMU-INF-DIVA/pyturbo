@@ -1,5 +1,10 @@
 # Version History
 
+## v0.6.10
+
+- Check system arguments.
+- Allow GPU selection in resources.
+
 ## v0.6.9
 
 - Handle exception from GPUtil.
