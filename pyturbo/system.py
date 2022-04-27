@@ -80,6 +80,8 @@ class System(object):
         self.resources = Resources(**resource_scan_args)
         self.num_pipeline = self.get_num_pipeline(
             self.resources, **custom_args)
+        assert isinstance(self.num_pipeline, int) and self.num_pipeline > 0, \
+            f'Invalid number of pipelines: {self.num_pipeline}'
         if self.debug_mode:
             self.num_pipeline = 1
             self.pipeline_cls = SyncPipeline
@@ -192,6 +194,8 @@ class System(object):
         for pipeline_i, resources in enumerate(
                 self.resources.split(self.num_pipeline)):
             stages = self.get_stages(resources)
+            assert all([isinstance(s, Stage) for s in stages]), \
+                f'Invalid stages: {stages}'
             self.logger.info('Building pipeline %d: \n\t%s', pipeline_i,
                              '\n\t'.join([repr(s) for s in stages]))
             pipeline_fn = partial(
