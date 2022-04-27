@@ -1,5 +1,9 @@
 # Version History
 
+## v0.6.11
+
+- Fix GPU selection.
+
 ## v0.6.10
 
 - Check system arguments.

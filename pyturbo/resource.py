@@ -39,8 +39,8 @@ class Resources(object):
             visible_gpus = os.environ.get('CUDA_VISIBLE_DEVICES')
             if visible_gpus is not None:
                 gpus = [*map(int, visible_gpus.split(','))]
-            # Remove env for correct GPU indices in subprocesses
-            del os.environ['CUDA_VISIBLE_DEVICES']
+                # Remove env for correct GPU indices in subprocesses
+                del os.environ['CUDA_VISIBLE_DEVICES']
             if len(gpus) > 0:
                 resources['gpu'] = gpus
         except Exception as e:
