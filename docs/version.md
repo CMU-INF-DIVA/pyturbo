@@ -1,5 +1,10 @@
 # Version History
 
+## v0.7.0
+
+- Bump version.
+- Silent warning about RLIMIT_NOFILE.
+
 ## v0.6.11
 
 - Fix GPU selection.

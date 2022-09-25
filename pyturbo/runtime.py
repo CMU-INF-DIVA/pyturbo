@@ -10,12 +10,13 @@ try:
     import torch.multiprocessing as mp
     hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
     resource.setrlimit(resource.RLIMIT_NOFILE, (hard_limit, hard_limit))
-    if hard_limit < 51200:
+    if hard_limit < 51200 and os.environ.get('PYTURBO_NOFILE_WARNED') is None:
         warnings.warn(
             'Ulimit of open files (%d) is too small. If errors of unable to '
             'open files occur, try add the following in your start '
             'script: `torch.mp.set_sharing_strategy("file_system")`' % (
                 hard_limit))
+        os.environ['PYTURBO_NOFILE_WARNED'] = 'True'
 except ImportError:
     import multiprocessing as mp
 
