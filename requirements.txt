@@ -1,3 +1,5 @@
 tqdm
 GPUtil
 psutil
+pynvml
+inotify
