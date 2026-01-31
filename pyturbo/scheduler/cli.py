@@ -71,6 +71,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory for status JSON files (default: status/)",
     )
 
+    # V3 remote execution options
+    run_parser.add_argument(
+        "--remote", action="store_true",
+        help="[V3] Enable remote execution mode",
+    )
+    run_parser.add_argument(
+        "--remote-config", type=str, default=None,
+        help="[V3] Remote configuration JSON file (machines, wandb, github)",
+    )
+    run_parser.add_argument(
+        "--machine", type=str, default=None,
+        help="[V3] Target machine ID for remote execution",
+    )
+    run_parser.add_argument(
+        "--remote-method", type=str, default="gh",
+        choices=["gh", "ssh"],
+        help="[V3] Remote execution method: gh (GitHub Actions) or ssh (default: gh)",
+    )
+
     return parser
 
 
@@ -117,6 +136,28 @@ def cmd_run(args: argparse.Namespace) -> int:
     executor = LocalExecutor()
     status_store = StatusStore(args.status_dir)
     bus = FileMessageBus(status_store)
+
+    # V3: remote mode overrides executor and bus
+    if getattr(args, "remote", False):
+        from .config import RemoteConfig
+        from .remote_executor import RemoteExecutor
+        from .wandb_bus import WandBMessageBus
+
+        if not args.remote_config:
+            logger.error("[ERROR] --remote requires --remote-config")
+            return 2
+
+        try:
+            remote_cfg = RemoteConfig.load(args.remote_config)
+        except Exception as e:
+            logger.error("[ERROR] Failed to load remote config: %s", e)
+            return 2
+
+        executor = RemoteExecutor(remote_cfg, method=args.remote_method)
+        bus = WandBMessageBus(
+            project=remote_cfg.wandb.project,
+            entity=remote_cfg.wandb.entity,
+        )
 
     # Run DAG
     runner = DAGRunner(

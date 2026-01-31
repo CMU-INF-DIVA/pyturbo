@@ -1,0 +1,31 @@
+name: Run GPU Experiment
+on:
+  workflow_dispatch:
+    inputs:
+      experiment:
+        description: 'Experiment ID (e.g. t1, t3, all)'
+        required: true
+      mode:
+        description: 'Mode: training or evaluation'
+        required: true
+        default: 'training'
+      gpu_count:
+        description: 'Number of GPUs required'
+        required: true
+        default: '4'
+
+jobs:
+  run:
+    runs-on: [self-hosted, gpu]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run experiment via PyTurbo
+        run: |
+          pyturbo run \
+            --blocking \
+            --gpu-required ${{ github.event.inputs.gpu_count }} \
+            --mode ${{ github.event.inputs.mode }} \
+            --poll-interval 30 \
+            --max-wait 7200 \
+            task_defs/${{ github.event.inputs.experiment }}.json
