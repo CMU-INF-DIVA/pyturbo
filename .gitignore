@@ -1,3 +1,4 @@
+tmp_pyturbo-v2/
 .vscode
 .history
 
@@ -105,3 +106,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+.claude
