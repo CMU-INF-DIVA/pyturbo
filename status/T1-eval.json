@@ -1,0 +1,11 @@
+{
+  "job_id": "T1-eval",
+  "state": "success",
+  "start_time": null,
+  "end_time": null,
+  "gpu_ids": [],
+  "exit_code": null,
+  "retry_count": 0,
+  "artifacts": {},
+  "wandb_run_id": null
+}

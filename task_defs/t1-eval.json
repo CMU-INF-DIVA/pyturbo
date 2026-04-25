@@ -1,0 +1,13 @@
+[
+  {
+    "id": "T1-eval",
+    "subject": "Evaluate T1 TikTok Qwen-Clf",
+    "command": "cd /home/wenhel/dsta-stance-project/dsta-stance-clean-refactor-s2 && CUDA_VISIBLE_DEVICES={gpu_ids} python -m stance.core.runner --mode evaluation --system script --config /home/wenhel/dsta-stance-project/dsta-stance-clean-refactor-s2/configs/experiments/t1-tiktok-qwen-clf.yaml --model-path /home/wenhel/dsta-stance-project/dsta-stance-clean-refactor-s2/output/t1_tiktok_qwen_clf_mp/best_model --gpu-ids {gpu_ids}",
+    "gpu_required": 4,
+    "blockedBy": [],
+    "blocks": [],
+    "max_retry": 1,
+    "priority": 1,
+    "tags": ["eval", "t1"]
+  }
+]

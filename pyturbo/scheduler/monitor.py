@@ -12,7 +12,7 @@ from .dataclasses import GPUState
 logger = logging.getLogger(__name__)
 
 # Idle thresholds (§12.3)
-MEM_IDLE_THRESHOLD_MB = 200
+MEM_IDLE_THRESHOLD_MB = 500
 UTIL_IDLE_THRESHOLD_PCT = 5
 PROCESS_COUNT_IDLE = 0
 
